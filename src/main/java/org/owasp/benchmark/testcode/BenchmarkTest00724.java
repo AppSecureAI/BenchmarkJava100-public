@@ -67,6 +67,6 @@ public class BenchmarkTest00724 extends HttpServlet {
         }
 
         response.setHeader("X-XSS-Protection", "0");
-        response.getWriter().println(bar);
+        response.getWriter().println(org.apache.commons.lang.StringEscapeUtils.escapeHtml(bar));
     }
 }
