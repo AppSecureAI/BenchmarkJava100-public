@@ -47,6 +47,12 @@ public class BenchmarkTest02528 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
+        // Validate bar to prevent SQL injection - only allow valid SQL identifier characters
+        if (!bar.matches("^[a-zA-Z0-9_]+$")) {
+            response.getWriter().println("Invalid procedure name.");
+            return;
+        }
+
         String sql = "{call " + bar + "}";
 
         try {
