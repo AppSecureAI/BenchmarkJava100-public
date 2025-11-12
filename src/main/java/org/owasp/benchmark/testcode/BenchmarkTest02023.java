@@ -56,12 +56,19 @@ public class BenchmarkTest02023 extends HttpServlet {
             java.util.Properties benchmarkprops = new java.util.Properties();
             benchmarkprops.load(
                     this.getClass().getClassLoader().getResourceAsStream("benchmark.properties"));
-            String algorithm = benchmarkprops.getProperty("cryptoAlg1", "DESede/ECB/PKCS5Padding");
+            String algorithm = benchmarkprops.getProperty("cryptoAlg1", "AES/GCM/NoPadding");
             javax.crypto.Cipher c = javax.crypto.Cipher.getInstance(algorithm);
 
             // Prepare the cipher to encrypt
-            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("DES").generateKey();
-            c.init(javax.crypto.Cipher.ENCRYPT_MODE, key);
+            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("AES").generateKey();
+
+            // Generate a random 96-bit IV for GCM mode
+            byte[] iv = new byte[12];
+            java.security.SecureRandom random = new java.security.SecureRandom();
+            random.nextBytes(iv);
+            javax.crypto.spec.GCMParameterSpec gcmSpec = new javax.crypto.spec.GCMParameterSpec(128, iv);
+
+            c.init(javax.crypto.Cipher.ENCRYPT_MODE, key, gcmSpec);
 
             // encrypt and store the results
             byte[] input = {(byte) '?'};
@@ -89,7 +96,8 @@ public class BenchmarkTest02023 extends HttpServlet {
             fw.write(
                     "secret_value="
                             + org.owasp.esapi.ESAPI.encoder().encodeForBase64(result, true)
-                            + "\n");
+                            + "
+");
             fw.close();
             response.getWriter()
                     .println(
@@ -105,7 +113,8 @@ public class BenchmarkTest02023 extends HttpServlet {
                 | javax.crypto.NoSuchPaddingException
                 | javax.crypto.IllegalBlockSizeException
                 | javax.crypto.BadPaddingException
-                | java.security.InvalidKeyException e) {
+                | java.security.InvalidKeyException
+                | java.security.InvalidAlgorithmParameterException e) {
             response.getWriter()
                     .println(
                             "Problem executing crypto - javax.crypto.Cipher.getInstance(java.lang.String,java.security.Provider) Test Case");
