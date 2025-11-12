@@ -49,7 +49,8 @@ public class BenchmarkTest01287 extends HttpServlet {
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
         String[] args = {cmd};
-        String[] argsEnv = {bar};
+        String sanitizedBar = sanitizeEnvironmentVariable(bar);
+        String[] argsEnv = {sanitizedBar};
 
         Runtime r = Runtime.getRuntime();
 
@@ -63,6 +64,33 @@ public class BenchmarkTest01287 extends HttpServlet {
             return;
         }
     } // end doPost
+
+    /**
+     * Sanitizes environment variable input to prevent command injection.
+     * Only allows alphanumeric characters, underscores, hyphens, equals, periods, and forward slashes.
+     * Rejects shell metacharacters and limits input length.
+     *
+     * @param input The environment variable string to sanitize
+     * @return Sanitized string, or empty string if input contains dangerous characters
+     */
+    private String sanitizeEnvironmentVariable(String input) {
+        if (input == null || input.isEmpty()) {
+            return "";
+        }
+
+        // Only allow safe characters: alphanumeric, underscore, hyphen, equals, period, forward slash
+        // Reject shell metacharacters: ; & | $ ` \ " ' < > ( ) { } [ ] * ? ~ ! # ^
+        if (!input.matches("^[a-zA-Z0-9_=./-]*$")) {
+            return "";
+        }
+
+        // Limit length to prevent buffer overflow attacks
+        if (input.length() > 1024) {
+            return "";
+        }
+
+        return input;
+    }
 
     private class Test {
 
