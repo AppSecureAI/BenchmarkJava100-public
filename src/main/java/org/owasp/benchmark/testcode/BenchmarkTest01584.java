@@ -23,6 +23,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.text.StringEscapeUtils;
 
 @WebServlet(value = "/xss-03/BenchmarkTest01584")
 public class BenchmarkTest01584 extends HttpServlet {
@@ -49,7 +50,8 @@ public class BenchmarkTest01584 extends HttpServlet {
 
         response.setHeader("X-XSS-Protection", "0");
         Object[] obj = {"a", "b"};
-        response.getWriter().format(java.util.Locale.US, bar, obj);
+        String encodedBar = StringEscapeUtils.escapeHtml4(bar);
+        response.getWriter().format(java.util.Locale.US, encodedBar, obj);
     } // end doPost
 
     private class Test {
