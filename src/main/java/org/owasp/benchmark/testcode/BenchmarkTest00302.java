@@ -57,16 +57,16 @@ public class BenchmarkTest00302 extends HttpServlet {
 
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
-        String cmd = "";
         String osName = System.getProperty("os.name");
-        if (osName.indexOf("Windows") != -1) {
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
-        }
-
-        Runtime r = Runtime.getRuntime();
 
         try {
-            Process p = r.exec(cmd + bar);
+            ProcessBuilder pb = new ProcessBuilder();
+            if (osName.indexOf("Windows") != -1) {
+                pb.command("cmd.exe", "/c", "echo", bar);
+            } else {
+                pb.command("echo", bar);
+            }
+            Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
