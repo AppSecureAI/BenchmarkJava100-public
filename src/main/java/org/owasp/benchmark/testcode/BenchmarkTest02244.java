@@ -49,6 +49,9 @@ public class BenchmarkTest02244 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
+        // Sanitize input to prevent command injection
+        String sanitizedBar = sanitizeInput(bar);
+
         java.util.List<String> argList = new java.util.ArrayList<String>();
 
         String osName = System.getProperty("os.name");
@@ -59,7 +62,7 @@ public class BenchmarkTest02244 extends HttpServlet {
             argList.add("sh");
             argList.add("-c");
         }
-        argList.add("echo " + bar);
+        argList.add("echo " + sanitizedBar);
 
         ProcessBuilder pb = new ProcessBuilder(argList);
 
@@ -81,5 +84,21 @@ public class BenchmarkTest02244 extends HttpServlet {
         String bar = thing.doSomething(param);
 
         return bar;
+    }
+
+    /**
+     * Sanitizes input to prevent command injection by allowing only safe characters.
+     * Uses a whitelist approach to strip shell metacharacters.
+     *
+     * @param input The input string to sanitize
+     * @return A sanitized string containing only alphanumeric characters, spaces, dots, hyphens, and underscores
+     */
+    private static String sanitizeInput(String input) {
+        if (input == null) {
+            return "";
+        }
+        // Whitelist: only allow alphanumeric characters, spaces, dots, hyphens, and underscores
+        // This prevents shell metacharacters like ;|&$`<>()[]{}'"\ from being passed to the command
+        return input.replaceAll("[^a-zA-Z0-9\\s._-]", "");
     }
 }
