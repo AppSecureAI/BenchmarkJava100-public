@@ -49,7 +49,11 @@ public class BenchmarkTest01287 extends HttpServlet {
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
         String[] args = {cmd};
-        String[] argsEnv = {bar};
+
+        // Sanitize environment variable to prevent command injection
+        // Only allow alphanumeric characters, underscores, hyphens, and equals signs
+        String sanitizedBar = bar.replaceAll("[^a-zA-Z0-9_=\\-]", "");
+        String[] argsEnv = {sanitizedBar};
 
         Runtime r = Runtime.getRuntime();
 
