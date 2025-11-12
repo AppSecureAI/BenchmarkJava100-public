@@ -52,6 +52,14 @@ public class BenchmarkTest01191 extends HttpServlet {
 
         String bar = new Test().doSomething(request, param);
 
+        // Validate environment variable value to prevent command injection
+        if (bar != null && !bar.matches("^[a-zA-Z0-9_\\-\\.\\s]*$")) {
+            response.getWriter()
+                    .println(org.owasp.esapi.ESAPI.encoder().encodeForHTML(
+                            "Invalid input: Environment variable contains unsafe characters"));
+            return;
+        }
+
         String cmd =
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
