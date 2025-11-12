@@ -18,6 +18,7 @@
 package org.owasp.benchmark.testcode;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -28,6 +29,12 @@ import javax.servlet.http.HttpServletResponse;
 public class BenchmarkTest00293 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+    private static final Logger logger = Logger.getLogger(BenchmarkTest00293.class.getName());
+
+    // Pattern to validate input against shell metacharacters and command injection attempts.
+    // Allows only alphanumeric characters, spaces, hyphens, underscores, and periods
+    // to prevent shell command injection via special characters like ;|&$`<>(){}[]"'
+    private static final String SAFE_INPUT_PATTERN = "^[a-zA-Z0-9 ._-]*$";
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -57,6 +64,19 @@ public class BenchmarkTest00293 extends HttpServlet {
                             org.apache.commons.codec.binary.Base64.decodeBase64(
                                     org.apache.commons.codec.binary.Base64.encodeBase64(
                                             param.getBytes())));
+        }
+
+        // Validate input to prevent command injection
+        if (bar != null && !bar.matches(SAFE_INPUT_PATTERN)) {
+            // Log security event for monitoring
+            logger.warning(
+                    "Command injection attempt detected. Input contains disallowed characters: "
+                            + bar);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.getWriter()
+                    .println(
+                            "Invalid input: Only alphanumeric characters, spaces, hyphens, underscores, and periods are allowed.");
+            return;
         }
 
         java.util.List<String> argList = new java.util.ArrayList<String>();
