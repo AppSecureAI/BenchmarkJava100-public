@@ -50,7 +50,20 @@ public class BenchmarkTest00708 extends HttpServlet {
         String bar = thing.doSomething(param);
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+            // Load HMAC key from environment variable
+            String hmacKeyStr = System.getenv("HMAC_KEY");
+            if (hmacKeyStr == null || hmacKeyStr.isEmpty()) {
+                throw new ServletException("HMAC_KEY environment variable not configured");
+            }
+            byte[] keyBytes = hmacKeyStr.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            if (keyBytes.length < 32) {
+                throw new ServletException("HMAC_KEY must be at least 32 bytes long");
+            }
+
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            javax.crypto.spec.SecretKeySpec secretKey = new javax.crypto.spec.SecretKeySpec(keyBytes, "HmacSHA256");
+            mac.init(secretKey);
+
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -65,9 +78,8 @@ public class BenchmarkTest00708 extends HttpServlet {
                 }
                 input = java.util.Arrays.copyOf(strInput, i);
             }
-            md.update(input);
 
-            byte[] result = md.digest();
+            byte[] result = mac.doFinal(input);
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -77,7 +89,8 @@ public class BenchmarkTest00708 extends HttpServlet {
             fw.write(
                     "hash_value="
                             + org.owasp.esapi.ESAPI.encoder().encodeForBase64(result, true)
-                            + "\n");
+                            + "
+");
             fw.close();
             response.getWriter()
                     .println(
@@ -89,13 +102,13 @@ public class BenchmarkTest00708 extends HttpServlet {
                                             .encodeForHTML(new String(input))
                                     + "' hashed and stored<br/>");
 
-        } catch (java.security.NoSuchAlgorithmException e) {
-            System.out.println("Problem executing hash - TestCase");
+        } catch (java.security.NoSuchAlgorithmException | java.security.InvalidKeyException e) {
+            System.out.println("Problem executing HMAC - TestCase");
             throw new ServletException(e);
         }
 
         response.getWriter()
                 .println(
-                        "Hash Test java.security.MessageDigest.getInstance(java.lang.String) executed");
+                        "HMAC Test javax.crypto.Mac.getInstance(java.lang.String) executed");
     }
 }
