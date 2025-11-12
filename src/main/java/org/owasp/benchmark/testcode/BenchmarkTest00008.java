@@ -18,6 +18,8 @@
 package org.owasp.benchmark.testcode;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -28,6 +30,17 @@ import javax.servlet.http.HttpServletResponse;
 public class BenchmarkTest00008 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+
+    // Whitelist of allowed stored procedures to prevent SQL injection
+    private static final Map<String, String> ALLOWED_PROCEDURES = new HashMap<>();
+    static {
+        // Map user-provided identifiers to actual stored procedure names
+        // This prevents SQL injection while supporting legitimate procedure calls
+        ALLOWED_PROCEDURES.put("verifyUserInfo", "verifyUserInfo");
+        ALLOWED_PROCEDURES.put("getAccountInfo", "getAccountInfo");
+        ALLOWED_PROCEDURES.put("processOrder", "processOrder");
+        // Add additional procedures as needed for your application
+    }
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -49,7 +62,14 @@ public class BenchmarkTest00008 extends HttpServlet {
         // URL Decode the header value since req.getHeader() doesn't. Unlike req.getParameter().
         param = java.net.URLDecoder.decode(param, "UTF-8");
 
-        String sql = "{call " + param + "}";
+        // Use whitelist to prevent SQL injection - only allow pre-approved stored procedures
+        String procedureName = ALLOWED_PROCEDURES.get(param);
+        if (procedureName == null) {
+            response.getWriter().println("Error: Stored procedure not allowed.");
+            return;
+        }
+
+        String sql = "{call " + procedureName + "}";
 
         try {
             java.sql.Connection connection =
