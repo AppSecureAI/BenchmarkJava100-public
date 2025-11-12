@@ -39,6 +39,7 @@ public class BenchmarkTest00056 extends HttpServlet {
         userCookie.setSecure(true);
         userCookie.setPath(request.getRequestURI());
         userCookie.setDomain(new java.net.URL(request.getRequestURL().toString()).getHost());
+        userCookie.setHttpOnly(true);
         response.addCookie(userCookie);
         javax.servlet.RequestDispatcher rd =
                 request.getRequestDispatcher("/crypto-00/BenchmarkTest00056.html");
@@ -119,7 +120,8 @@ public class BenchmarkTest00056 extends HttpServlet {
             fw.write(
                     "secret_value="
                             + org.owasp.esapi.ESAPI.encoder().encodeForBase64(result, true)
-                            + "\n");
+                            + "
+");
             fw.close();
             response.getWriter()
                     .println(
