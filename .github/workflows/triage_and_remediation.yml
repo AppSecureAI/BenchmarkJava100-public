@@ -1,0 +1,26 @@
+name: Triage and Remediation
+
+permissions:
+  contents: read
+  id-token: write
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: AppSecAI
+        uses: AppSecureAI/submit-run-action@0.0.18_cc
+        with:
+          file: vuln_file/output_sarif_100.sarif
+          use-triage-cc: true
+          triage-method: ml_based
+          use-remediate-loop-cc: true
