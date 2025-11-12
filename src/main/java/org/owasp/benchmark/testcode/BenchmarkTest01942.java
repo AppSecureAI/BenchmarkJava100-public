@@ -57,11 +57,14 @@ public class BenchmarkTest01942 extends HttpServlet {
         }
 
         String[] argsEnv = {"Foo=bar"};
-        Runtime r = Runtime.getRuntime();
 
         try {
-            Process p =
-                    r.exec(cmd + bar, argsEnv, new java.io.File(System.getProperty("user.dir")));
+            ProcessBuilder pb = new ProcessBuilder(cmd, bar);
+            java.util.Map<String, String> env = pb.environment();
+            env.clear();
+            env.put("Foo", "bar");
+            pb.directory(new java.io.File(System.getProperty("user.dir")));
+            Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
