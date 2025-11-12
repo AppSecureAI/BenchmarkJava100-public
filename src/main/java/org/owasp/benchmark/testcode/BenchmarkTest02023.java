@@ -56,12 +56,19 @@ public class BenchmarkTest02023 extends HttpServlet {
             java.util.Properties benchmarkprops = new java.util.Properties();
             benchmarkprops.load(
                     this.getClass().getClassLoader().getResourceAsStream("benchmark.properties"));
-            String algorithm = benchmarkprops.getProperty("cryptoAlg1", "DESede/ECB/PKCS5Padding");
+            String algorithm = benchmarkprops.getProperty("cryptoAlg1", "AES/CBC/PKCS5Padding");
             javax.crypto.Cipher c = javax.crypto.Cipher.getInstance(algorithm);
 
             // Prepare the cipher to encrypt
-            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("DES").generateKey();
-            c.init(javax.crypto.Cipher.ENCRYPT_MODE, key);
+            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("AES").generateKey();
+
+            // Generate a secure random IV for CBC mode
+            byte[] iv = new byte[c.getBlockSize()];
+            java.security.SecureRandom random = new java.security.SecureRandom();
+            random.nextBytes(iv);
+            javax.crypto.spec.IvParameterSpec ivSpec = new javax.crypto.spec.IvParameterSpec(iv);
+
+            c.init(javax.crypto.Cipher.ENCRYPT_MODE, key, ivSpec);
 
             // encrypt and store the results
             byte[] input = {(byte) '?'};
@@ -80,6 +87,11 @@ public class BenchmarkTest02023 extends HttpServlet {
             }
             byte[] result = c.doFinal(input);
 
+            // Prepend IV to ciphertext for storage (required for CBC mode decryption)
+            byte[] combined = new byte[iv.length + result.length];
+            System.arraycopy(iv, 0, combined, 0, iv.length);
+            System.arraycopy(result, 0, combined, iv.length, result.length);
+
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -88,8 +100,9 @@ public class BenchmarkTest02023 extends HttpServlet {
                     new java.io.FileWriter(fileTarget, true); // the true will append the new data
             fw.write(
                     "secret_value="
-                            + org.owasp.esapi.ESAPI.encoder().encodeForBase64(result, true)
-                            + "\n");
+                            + org.owasp.esapi.ESAPI.encoder().encodeForBase64(combined, true)
+                            + "
+");
             fw.close();
             response.getWriter()
                     .println(
@@ -105,7 +118,8 @@ public class BenchmarkTest02023 extends HttpServlet {
                 | javax.crypto.NoSuchPaddingException
                 | javax.crypto.IllegalBlockSizeException
                 | javax.crypto.BadPaddingException
-                | java.security.InvalidKeyException e) {
+                | java.security.InvalidKeyException
+                | java.security.InvalidAlgorithmParameterException e) {
             response.getWriter()
                     .println(
                             "Problem executing crypto - javax.crypto.Cipher.getInstance(java.lang.String,java.security.Provider) Test Case");
