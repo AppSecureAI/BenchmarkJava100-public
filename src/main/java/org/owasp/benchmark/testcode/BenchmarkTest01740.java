@@ -50,12 +50,17 @@ public class BenchmarkTest01740 extends HttpServlet {
             java.util.Properties benchmarkprops = new java.util.Properties();
             benchmarkprops.load(
                     this.getClass().getClassLoader().getResourceAsStream("benchmark.properties"));
-            String algorithm = benchmarkprops.getProperty("cryptoAlg1", "DESede/ECB/PKCS5Padding");
+            String algorithm = benchmarkprops.getProperty("cryptoAlg1", "AES/GCM/NoPadding");
             javax.crypto.Cipher c = javax.crypto.Cipher.getInstance(algorithm);
 
             // Prepare the cipher to encrypt
-            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("DES").generateKey();
-            c.init(javax.crypto.Cipher.ENCRYPT_MODE, key);
+            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("AES").generateKey();
+            // Generate a random IV for AES-GCM
+            byte[] iv = new byte[12]; // 96-bit IV recommended for GCM
+            java.security.SecureRandom random = new java.security.SecureRandom();
+            random.nextBytes(iv);
+            javax.crypto.spec.GCMParameterSpec gcmSpec = new javax.crypto.spec.GCMParameterSpec(128, iv);
+            c.init(javax.crypto.Cipher.ENCRYPT_MODE, key, gcmSpec);
 
             // encrypt and store the results
             byte[] input = {(byte) '?'};
@@ -74,6 +79,11 @@ public class BenchmarkTest01740 extends HttpServlet {
             }
             byte[] result = c.doFinal(input);
 
+            // Prepend IV to ciphertext for AES-GCM (required for decryption)
+            byte[] ivAndCiphertext = new byte[iv.length + result.length];
+            System.arraycopy(iv, 0, ivAndCiphertext, 0, iv.length);
+            System.arraycopy(result, 0, ivAndCiphertext, iv.length, result.length);
+
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -82,8 +92,9 @@ public class BenchmarkTest01740 extends HttpServlet {
                     new java.io.FileWriter(fileTarget, true); // the true will append the new data
             fw.write(
                     "secret_value="
-                            + org.owasp.esapi.ESAPI.encoder().encodeForBase64(result, true)
-                            + "\n");
+                            + org.owasp.esapi.ESAPI.encoder().encodeForBase64(ivAndCiphertext, true)
+                            + "
+");
             fw.close();
             response.getWriter()
                     .println(
@@ -99,7 +110,8 @@ public class BenchmarkTest01740 extends HttpServlet {
                 | javax.crypto.NoSuchPaddingException
                 | javax.crypto.IllegalBlockSizeException
                 | javax.crypto.BadPaddingException
-                | java.security.InvalidKeyException e) {
+                | java.security.InvalidKeyException
+                | java.security.InvalidAlgorithmParameterException e) {
             response.getWriter()
                     .println(
                             "Problem executing crypto - javax.crypto.Cipher.getInstance(java.lang.String,java.security.Provider) Test Case");
