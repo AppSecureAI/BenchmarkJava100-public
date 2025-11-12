@@ -23,6 +23,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.text.StringEscapeUtils;
 
 @WebServlet(value = "/xss-02/BenchmarkTest01268")
 public class BenchmarkTest01268 extends HttpServlet {
@@ -46,10 +47,9 @@ public class BenchmarkTest01268 extends HttpServlet {
         String bar = new Test().doSomething(request, param);
 
         response.setHeader("X-XSS-Protection", "0");
-        int length = 1;
         if (bar != null) {
-            length = bar.length();
-            response.getWriter().write(bar, 0, length);
+            String sanitizedBar = StringEscapeUtils.escapeHtml4(bar);
+            response.getWriter().write(sanitizedBar);
         }
     } // end doPost
 
