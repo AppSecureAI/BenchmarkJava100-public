@@ -45,6 +45,15 @@ public class BenchmarkTest01286 extends HttpServlet {
 
         String bar = new Test().doSomething(request, param);
 
+        // Sanitize user input to prevent command injection
+        if (!bar.matches("^[a-zA-Z0-9._ -]*$")) {
+            response.getWriter()
+                    .println(
+                            org.owasp.esapi.ESAPI.encoder()
+                                    .encodeForHTML("Invalid input: only alphanumeric characters, spaces, dots, underscores, and hyphens are allowed."));
+            return;
+        }
+
         String cmd = "";
         String a1 = "";
         String a2 = "";
