@@ -71,6 +71,13 @@ public class BenchmarkTest00825 extends HttpServlet {
                 org.owasp.benchmark.helpers.ThingFactory.createThing();
         String bar = thing.doSomething(param);
 
+        // Validate input to prevent command injection
+        if (bar == null || !bar.matches("^[a-zA-Z0-9\\s\\-_.@]+$")) {
+            response.getWriter()
+                    .println("Invalid input: Only alphanumeric characters, spaces, hyphens, underscores, periods, and @ symbols are allowed.");
+            return;
+        }
+
         String cmd =
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
