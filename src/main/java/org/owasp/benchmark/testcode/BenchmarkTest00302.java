@@ -63,10 +63,9 @@ public class BenchmarkTest00302 extends HttpServlet {
             cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
         }
 
-        Runtime r = Runtime.getRuntime();
-
         try {
-            Process p = r.exec(cmd + bar);
+            ProcessBuilder pb = new ProcessBuilder(cmd, bar);
+            Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
