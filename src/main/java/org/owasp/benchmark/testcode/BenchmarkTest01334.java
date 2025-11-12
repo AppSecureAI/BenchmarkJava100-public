@@ -18,6 +18,8 @@
 package org.owasp.benchmark.testcode;
 
 import java.io.IOException;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -28,6 +30,35 @@ import javax.servlet.http.HttpServletResponse;
 public class BenchmarkTest01334 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+    private static final String HMAC_ALGORITHM = "HmacSHA256";
+    private static final byte[] SECRET_KEY = loadSecretKey();
+
+    private static byte[] loadSecretKey() {
+        String keyHex = System.getenv("HMAC_SECRET_KEY");
+        if (keyHex == null || keyHex.isEmpty()) {
+            throw new RuntimeException(
+                    "HMAC_SECRET_KEY environment variable must be set with a hex-encoded 256-bit key. "
+                    + "Generate one with: openssl rand -hex 32");
+        }
+        try {
+            // Convert hex string to byte array
+            int len = keyHex.length();
+            if (len % 2 != 0) {
+                throw new RuntimeException("HMAC_SECRET_KEY must be a valid hex string (even length)");
+            }
+            byte[] key = new byte[len / 2];
+            for (int i = 0; i < len; i += 2) {
+                key[i / 2] = (byte) ((Character.digit(keyHex.charAt(i), 16) << 4)
+                        + Character.digit(keyHex.charAt(i + 1), 16));
+            }
+            if (key.length < 32) {
+                throw new RuntimeException("HMAC_SECRET_KEY must be at least 256 bits (64 hex characters)");
+            }
+            return key;
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("HMAC_SECRET_KEY must be a valid hex string", e);
+        }
+    }
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -50,7 +81,10 @@ public class BenchmarkTest01334 extends HttpServlet {
         String bar = new Test().doSomething(request, param);
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+            Mac mac = Mac.getInstance(HMAC_ALGORITHM);
+            SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY, HMAC_ALGORITHM);
+            mac.init(keySpec);
+
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -65,9 +99,8 @@ public class BenchmarkTest01334 extends HttpServlet {
                 }
                 input = java.util.Arrays.copyOf(strInput, i);
             }
-            md.update(input);
 
-            byte[] result = md.digest();
+            byte[] result = mac.doFinal(input);
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -77,7 +110,8 @@ public class BenchmarkTest01334 extends HttpServlet {
             fw.write(
                     "hash_value="
                             + org.owasp.esapi.ESAPI.encoder().encodeForBase64(result, true)
-                            + "\n");
+                            + "
+");
             fw.close();
             response.getWriter()
                     .println(
@@ -89,14 +123,14 @@ public class BenchmarkTest01334 extends HttpServlet {
                                             .encodeForHTML(new String(input))
                                     + "' hashed and stored<br/>");
 
-        } catch (java.security.NoSuchAlgorithmException e) {
+        } catch (java.security.NoSuchAlgorithmException | java.security.InvalidKeyException e) {
             System.out.println("Problem executing hash - TestCase");
             throw new ServletException(e);
         }
 
         response.getWriter()
                 .println(
-                        "Hash Test java.security.MessageDigest.getInstance(java.lang.String) executed");
+                        "Hash Test javax.crypto.Mac.getInstance(java.lang.String) executed");
     } // end doPost
 
     private class Test {
