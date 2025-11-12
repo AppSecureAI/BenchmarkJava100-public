@@ -60,7 +60,14 @@ public class BenchmarkTest02311 extends HttpServlet {
         String bar = doSomething(request, param);
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+            String secretKeyString = System.getenv("HMAC_SECRET_KEY");
+            if (secretKeyString == null || secretKeyString.isEmpty()) {
+                throw new ServletException("HMAC_SECRET_KEY environment variable not configured");
+            }
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            javax.crypto.SecretKey secretKey = new javax.crypto.spec.SecretKeySpec(
+                    secretKeyString.getBytes("UTF-8"), "HmacSHA256");
+            mac.init(secretKey);
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -75,9 +82,9 @@ public class BenchmarkTest02311 extends HttpServlet {
                 }
                 input = java.util.Arrays.copyOf(strInput, i);
             }
-            md.update(input);
+            mac.update(input);
 
-            byte[] result = md.digest();
+            byte[] result = mac.doFinal();
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -87,7 +94,8 @@ public class BenchmarkTest02311 extends HttpServlet {
             fw.write(
                     "hash_value="
                             + org.owasp.esapi.ESAPI.encoder().encodeForBase64(result, true)
-                            + "\n");
+                            + "
+");
             fw.close();
             response.getWriter()
                     .println(
@@ -99,14 +107,14 @@ public class BenchmarkTest02311 extends HttpServlet {
                                             .encodeForHTML(new String(input))
                                     + "' hashed and stored<br/>");
 
-        } catch (java.security.NoSuchAlgorithmException e) {
+        } catch (java.security.NoSuchAlgorithmException | java.security.InvalidKeyException | java.io.UnsupportedEncodingException e) {
             System.out.println("Problem executing hash - TestCase");
             throw new ServletException(e);
         }
 
         response.getWriter()
                 .println(
-                        "Hash Test java.security.MessageDigest.getInstance(java.lang.String) executed");
+                        "Hash Test javax.crypto.Mac.getInstance(java.lang.String) executed");
     } // end doPost
 
     private static String doSomething(HttpServletRequest request, String param)
