@@ -48,17 +48,17 @@ public class BenchmarkTest02537 extends HttpServlet {
         String bar = doSomething(request, param);
 
         try {
-            String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
+            String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD=?";
 
-            org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.batchUpdate(sql);
+            org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.update(sql, bar);
             response.getWriter()
                     .println(
                             "No results can be displayed for query: "
                                     + org.owasp.esapi.ESAPI.encoder().encodeForHTML(sql)
                                     + "<br>"
-                                    + " because the Spring batchUpdate method doesn't return results.");
-            //		System.out.println("no results for query: " + sql + " because the Spring batchUpdate
-            // method doesn't return results.");
+                                    + " because the parameterized query doesn't return results.");
+            //		System.out.println("no results for query: " + sql + " because the parameterized query
+            // doesn't return results.");
         } catch (org.springframework.dao.DataAccessException e) {
             if (org.owasp.benchmark.helpers.DatabaseHelper.hideSQLErrors) {
                 response.getWriter().println("Error processing request.");
