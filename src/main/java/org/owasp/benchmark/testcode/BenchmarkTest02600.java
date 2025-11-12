@@ -70,12 +70,44 @@ public class BenchmarkTest02600 extends HttpServlet {
         String bar = doSomething(request, param);
 
         response.setHeader("X-XSS-Protection", "0");
-        int length = 1;
         if (bar != null) {
-            length = bar.length();
-            response.getWriter().write(bar.toCharArray(), 0, length);
+            String escapedBar = escapeHtml(bar);
+            response.getWriter().write(escapedBar);
         }
     } // end doPost
+
+    private static String escapeHtml(String input) {
+        if (input == null) {
+            return null;
+        }
+        StringBuilder escaped = new StringBuilder(input.length() * 2);
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            switch (c) {
+                case '<':
+                    escaped.append("&lt;");
+                    break;
+                case '>':
+                    escaped.append("&gt;");
+                    break;
+                case '&':
+                    escaped.append("&amp;");
+                    break;
+                case '"':
+                    escaped.append("&quot;");
+                    break;
+                case ''':
+                    escaped.append("&#x27;");
+                    break;
+                case '/':
+                    escaped.append("&#x2F;");
+                    break;
+                default:
+                    escaped.append(c);
+            }
+        }
+        return escaped.toString();
+    }
 
     private static String doSomething(HttpServletRequest request, String param)
             throws ServletException, IOException {
