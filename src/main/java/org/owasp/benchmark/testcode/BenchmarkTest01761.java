@@ -47,7 +47,7 @@ public class BenchmarkTest01761 extends HttpServlet {
         String bar = new Test().doSomething(request, param);
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA1", "SUN");
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256", "SUN");
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -74,7 +74,8 @@ public class BenchmarkTest01761 extends HttpServlet {
             fw.write(
                     "hash_value="
                             + org.owasp.esapi.ESAPI.encoder().encodeForBase64(result, true)
-                            + "\n");
+                            + "
+");
             fw.close();
             response.getWriter()
                     .println(
