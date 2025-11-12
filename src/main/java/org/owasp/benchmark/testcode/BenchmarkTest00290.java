@@ -23,6 +23,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.owasp.esapi.ESAPI;
 
 @WebServlet(value = "/xss-00/BenchmarkTest00290")
 public class BenchmarkTest00290 extends HttpServlet {
@@ -54,6 +55,7 @@ public class BenchmarkTest00290 extends HttpServlet {
         String bar = sbxyz73567.append("_SafeStuff").toString();
 
         response.setHeader("X-XSS-Protection", "0");
-        response.getWriter().write(bar);
+        String encodedBar = ESAPI.encoder().encodeForHTML(bar);
+        response.getWriter().write(encodedBar);
     }
 }
