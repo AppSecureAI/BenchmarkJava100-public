@@ -57,6 +57,12 @@ public class BenchmarkTest00328 extends HttpServlet {
 
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
+        // Validate input to prevent SQL injection - only allow alphanumeric and underscore
+        if (!bar.matches("^[a-zA-Z0-9_]+$")) {
+            response.getWriter().println("Error: Invalid procedure name.");
+            return;
+        }
+
         String sql = "{call " + bar + "}";
 
         try {
