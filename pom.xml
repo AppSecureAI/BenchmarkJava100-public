@@ -646,6 +646,12 @@
             <version>2.6</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>1.13.0</version>
+        </dependency>
+
         <!-- Including slf4j lib to avoid warning: SLF4J: Defaulting to no-operation (NOP) logger implementation -->
         <!-- Have to include early in the pom like this so this version takes precendence over the old version used by the apacheds libs. -->
         <dependency>
