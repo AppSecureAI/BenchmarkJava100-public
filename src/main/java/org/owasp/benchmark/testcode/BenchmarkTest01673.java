@@ -69,6 +69,9 @@ public class BenchmarkTest01673 extends HttpServlet {
 
         String bar = new Test().doSomething(request, param);
 
+        // Sanitize input to prevent command injection by removing shell metacharacters
+        bar = bar.replaceAll("[^a-zA-Z0-9\\s._-]", "");
+
         java.util.List<String> argList = new java.util.ArrayList<String>();
 
         String osName = System.getProperty("os.name");
