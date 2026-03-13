@@ -23,6 +23,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.owasp.encoder.Encode;
 
 @WebServlet(value = "/xss-03/BenchmarkTest01598")
 public class BenchmarkTest01598 extends HttpServlet {
@@ -48,7 +49,7 @@ public class BenchmarkTest01598 extends HttpServlet {
         String bar = new Test().doSomething(request, param);
 
         response.setHeader("X-XSS-Protection", "0");
-        response.getWriter().write(bar);
+        response.getWriter().write(Encode.forHtml(bar));
     } // end doPost
 
     private class Test {
