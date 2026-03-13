@@ -75,6 +75,11 @@ public class BenchmarkTest00825 extends HttpServlet {
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
         String[] args = {cmd};
+
+        if (bar == null || !bar.matches("[a-zA-Z0-9=_\\-./]+")) {
+            response.getWriter().println("Invalid parameter value.");
+            return;
+        }
         String[] argsEnv = {bar};
 
         Runtime r = Runtime.getRuntime();
