@@ -45,6 +45,11 @@ public class BenchmarkTest01286 extends HttpServlet {
 
         String bar = new Test().doSomething(request, param);
 
+        if (!bar.matches("[a-zA-Z0-9.\\-]+")) {
+            response.getWriter().println("Invalid input");
+            return;
+        }
+
         String cmd = "";
         String a1 = "";
         String a2 = "";
