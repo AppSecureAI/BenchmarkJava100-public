@@ -48,6 +48,11 @@ public class BenchmarkTest01287 extends HttpServlet {
         String cmd =
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
+        if (!bar.matches("[a-zA-Z0-9=_]*")) {
+            response.getWriter().println("Invalid input");
+            return;
+        }
+
         String[] args = {cmd};
         String[] argsEnv = {bar};
 
