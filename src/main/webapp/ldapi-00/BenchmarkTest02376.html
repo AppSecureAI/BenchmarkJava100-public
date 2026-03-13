@@ -10,6 +10,7 @@
 </head>
 <body>
     <form action="/benchmark/ldapi-00/BenchmarkTest02376" method="POST" id="FormBenchmarkTest02376" autocomplete="off">
+        {% csrf_token %}
         <p>Please make your car selection, and edit the value to be sent [value]:</p>
         <select name="BenchmarkTest02376" multiple>
             <option value="Ms Bar" selected>Audi. [Ms Bar]</option>
