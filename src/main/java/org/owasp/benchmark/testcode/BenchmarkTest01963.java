@@ -51,9 +51,10 @@ public class BenchmarkTest01963 extends HttpServlet {
         String bar = doSomething(request, param);
 
         try {
-            String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
+            String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD=?";
 
-            org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.batchUpdate(sql);
+            org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.batchUpdate(sql,
+                    java.util.Collections.singletonList(new Object[] {bar}));
             response.getWriter()
                     .println(
                             "No results can be displayed for query: "
