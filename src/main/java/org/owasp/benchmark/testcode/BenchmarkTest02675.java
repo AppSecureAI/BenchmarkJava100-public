@@ -29,6 +29,16 @@ public class BenchmarkTest02675 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    private static final javax.crypto.spec.SecretKeySpec HMAC_KEY = initHmacKey();
+
+    private static javax.crypto.spec.SecretKeySpec initHmacKey() {
+        String keyEnv = System.getenv("BENCHMARK_HMAC_KEY");
+        byte[] keyBytes =
+                (keyEnv != null ? keyEnv : "DefaultBenchmarkHMACKey!!")
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return new javax.crypto.spec.SecretKeySpec(keyBytes, "HmacSHA256");
+    }
+
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -47,7 +57,6 @@ public class BenchmarkTest02675 extends HttpServlet {
         String bar = doSomething(request, param);
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -62,9 +71,10 @@ public class BenchmarkTest02675 extends HttpServlet {
                 }
                 input = java.util.Arrays.copyOf(strInput, i);
             }
-            md.update(input);
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            mac.init(HMAC_KEY);
 
-            byte[] result = md.digest();
+            byte[] result = mac.doFinal(input);
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -86,7 +96,7 @@ public class BenchmarkTest02675 extends HttpServlet {
                                             .encodeForHTML(new String(input))
                                     + "' hashed and stored<br/>");
 
-        } catch (java.security.NoSuchAlgorithmException e) {
+        } catch (java.security.NoSuchAlgorithmException | java.security.InvalidKeyException e) {
             System.out.println("Problem executing hash - TestCase");
             throw new ServletException(e);
         }
