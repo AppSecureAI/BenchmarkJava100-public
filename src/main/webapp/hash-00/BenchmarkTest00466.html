@@ -10,6 +10,7 @@
 </head>
 <body>
     <form action="/benchmark/hash-00/BenchmarkTest00466" method="POST" id="FormBenchmarkTest00466" autocomplete="off">
+        {% csrf_token %}
         <p>Please make your car selection, and edit the value to be sent [value]:</p>
         <select name="BenchmarkTest00466" multiple>
             <option value="someSecret" selected>Audi. [someSecret]</option>
