@@ -51,9 +51,21 @@ public class BenchmarkTest01963 extends HttpServlet {
         String bar = doSomething(request, param);
 
         try {
-            String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
+            String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD=?";
 
-            org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.batchUpdate(sql);
+            org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.batchUpdate(sql,
+                    new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+                        @Override
+                        public void setValues(java.sql.PreparedStatement ps, int i)
+                                throws java.sql.SQLException {
+                            ps.setString(1, bar);
+                        }
+
+                        @Override
+                        public int getBatchSize() {
+                            return 1;
+                        }
+                    });
             response.getWriter()
                     .println(
                             "No results can be displayed for query: "
