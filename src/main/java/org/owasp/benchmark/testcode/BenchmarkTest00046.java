@@ -47,7 +47,7 @@ public class BenchmarkTest00046 extends HttpServlet {
         else param = "";
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
             byte[] input = {(byte) '?'};
             Object inputParam = param;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
