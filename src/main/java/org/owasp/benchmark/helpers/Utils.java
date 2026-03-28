@@ -423,10 +423,10 @@ public class Utils {
     public static SSLConnectionSocketFactory getSSLFactory() throws Exception {
         SSLContext sslcontext =
                 SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
-        // Allow TLSv1 protocol only
+        // Allow TLSv1.2 and TLSv1.3 protocols only
         SSLConnectionSocketFactory sslsf =
                 new SSLConnectionSocketFactory(
-                        sslcontext, new String[] {"TLSv1"}, null, NoopHostnameVerifier.INSTANCE);
+                        sslcontext, new String[] {"TLSv1.2", "TLSv1.3"}, null, NoopHostnameVerifier.INSTANCE);
         return sslsf;
     }
 
