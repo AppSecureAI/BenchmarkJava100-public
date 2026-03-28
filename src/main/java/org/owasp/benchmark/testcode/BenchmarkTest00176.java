@@ -48,7 +48,7 @@ public class BenchmarkTest00176 extends HttpServlet {
         // URL Decode the header value since req.getHeader() doesn't. Unlike req.getParameter().
         param = java.net.URLDecoder.decode(param, "UTF-8");
 
-        String bar = param;
+        String bar = param.replaceAll("[^a-zA-Z0-9\\s]", "");
 
         String cmd = "";
         String osName = System.getProperty("os.name");
