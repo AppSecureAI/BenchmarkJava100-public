@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROCESSING_MODE: group_cc
+      GROUPING_STRATEGY: smart
       AUTO_CREATE_PRS: "true"
     steps:
       - name: Checkout repository
