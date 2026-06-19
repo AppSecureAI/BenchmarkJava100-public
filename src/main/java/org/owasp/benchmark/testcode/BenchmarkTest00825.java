@@ -75,12 +75,11 @@ public class BenchmarkTest00825 extends HttpServlet {
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
         String[] args = {cmd};
-        String[] argsEnv = {bar};
 
         Runtime r = Runtime.getRuntime();
 
         try {
-            Process p = r.exec(args, argsEnv, new java.io.File(System.getProperty("user.dir")));
+            Process p = r.exec(args, null, new java.io.File(System.getProperty("user.dir")));
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
