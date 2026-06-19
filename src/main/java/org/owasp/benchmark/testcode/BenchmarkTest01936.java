@@ -50,16 +50,25 @@ public class BenchmarkTest01936 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
-        String cmd = "";
+        // Validate input against an allowlist before using in OS command
+        if (!bar.matches("[a-zA-Z0-9 ]*")) {
+            response.getWriter()
+                    .println(org.owasp.esapi.ESAPI.encoder().encodeForHTML("Invalid input"));
+            return;
+        }
+
+        String[] cmdArray;
         String osName = System.getProperty("os.name");
         if (osName.indexOf("Windows") != -1) {
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
+            cmdArray = new String[]{"cmd.exe", "/c", "echo", bar};
+        } else {
+            cmdArray = new String[]{"/bin/echo", bar};
         }
 
         Runtime r = Runtime.getRuntime();
 
         try {
-            Process p = r.exec(cmd + bar);
+            Process p = r.exec(cmdArray);
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
