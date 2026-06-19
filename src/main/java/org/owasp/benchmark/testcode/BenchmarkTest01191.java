@@ -52,6 +52,12 @@ public class BenchmarkTest01191 extends HttpServlet {
 
         String bar = new Test().doSomething(request, param);
 
+        if (!bar.matches("[a-zA-Z0-9=_\\-\\.@]*")) {
+            response.getWriter()
+                    .println(org.owasp.esapi.ESAPI.encoder().encodeForHTML("Invalid parameter value"));
+            return;
+        }
+
         String cmd =
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
