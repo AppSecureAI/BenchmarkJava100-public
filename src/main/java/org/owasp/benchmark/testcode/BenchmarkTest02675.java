@@ -29,6 +29,17 @@ public class BenchmarkTest02675 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    private static final javax.crypto.SecretKey HMAC_KEY;
+
+    static {
+        try {
+            javax.crypto.KeyGenerator kg = javax.crypto.KeyGenerator.getInstance("HmacSHA256");
+            HMAC_KEY = kg.generateKey();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -47,7 +58,8 @@ public class BenchmarkTest02675 extends HttpServlet {
         String bar = doSomething(request, param);
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+            javax.crypto.Mac md = javax.crypto.Mac.getInstance("HmacSHA256");
+            md.init(HMAC_KEY);
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -64,7 +76,7 @@ public class BenchmarkTest02675 extends HttpServlet {
             }
             md.update(input);
 
-            byte[] result = md.digest();
+            byte[] result = md.doFinal();
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -86,7 +98,7 @@ public class BenchmarkTest02675 extends HttpServlet {
                                             .encodeForHTML(new String(input))
                                     + "' hashed and stored<br/>");
 
-        } catch (java.security.NoSuchAlgorithmException e) {
+        } catch (java.security.NoSuchAlgorithmException | java.security.InvalidKeyException e) {
             System.out.println("Problem executing hash - TestCase");
             throw new ServletException(e);
         }
