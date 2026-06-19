@@ -50,10 +50,18 @@ public class BenchmarkTest01942 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
-        String cmd = "";
+        // Validate input against allowlist to prevent command injection
+        if (bar == null || !bar.matches("[a-zA-Z0-9 @._\\-]*")) {
+            response.getWriter().println("Invalid parameter: contains disallowed characters");
+            return;
+        }
+
+        String[] cmdArray;
         String osName = System.getProperty("os.name");
         if (osName.indexOf("Windows") != -1) {
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
+            cmdArray = new String[]{"cmd.exe", "/c", "echo", bar};
+        } else {
+            cmdArray = new String[]{"/bin/echo", bar};
         }
 
         String[] argsEnv = {"Foo=bar"};
@@ -61,7 +69,7 @@ public class BenchmarkTest01942 extends HttpServlet {
 
         try {
             Process p =
-                    r.exec(cmd + bar, argsEnv, new java.io.File(System.getProperty("user.dir")));
+                    r.exec(cmdArray, argsEnv, new java.io.File(System.getProperty("user.dir")));
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
