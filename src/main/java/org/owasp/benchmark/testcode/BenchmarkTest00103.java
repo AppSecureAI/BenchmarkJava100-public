@@ -39,6 +39,7 @@ public class BenchmarkTest00103 extends HttpServlet {
         userCookie.setSecure(true);
         userCookie.setPath(request.getRequestURI());
         userCookie.setDomain(new java.net.URL(request.getRequestURL().toString()).getHost());
+        userCookie.setHttpOnly(true);
         response.addCookie(userCookie);
         javax.servlet.RequestDispatcher rd =
                 request.getRequestDispatcher("/sqli-00/BenchmarkTest00103.html");
@@ -70,23 +71,29 @@ public class BenchmarkTest00103 extends HttpServlet {
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
         String sql =
-                "SELECT TOP 1 USERNAME from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
-        try {
-            Object results =
-                    org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.queryForObject(
-                            sql, new Object[] {}, String.class);
-            response.getWriter().println("Your results are: ");
-
-            //		System.out.println("Your results are");
-            response.getWriter()
-                    .println(org.owasp.esapi.ESAPI.encoder().encodeForHTML(results.toString()));
-            //		System.out.println(results.toString());
-        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
-            response.getWriter()
-                    .println(
-                            "No results returned for query: "
-                                    + org.owasp.esapi.ESAPI.encoder().encodeForHTML(sql));
-        } catch (org.springframework.dao.DataAccessException e) {
+                "SELECT TOP 1 USERNAME from USERS where USERNAME=? and PASSWORD=?";
+        try (java.sql.Connection connection =
+                        org.owasp.benchmark.helpers.DatabaseHelper.getSqlConnection();
+                java.sql.PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, "foo");
+            statement.setString(2, bar);
+            statement.execute();
+            try (java.sql.ResultSet rs = statement.getResultSet()) {
+                if (rs != null && rs.next()) {
+                    response.getWriter().println("Your results are: ");
+                    response.getWriter()
+                            .println(
+                                    org.owasp.esapi.ESAPI.encoder()
+                                            .encodeForHTML(rs.getString(1)));
+                } else {
+                    response.getWriter()
+                            .println(
+                                    "No results returned for query: "
+                                            + org.owasp.esapi.ESAPI.encoder()
+                                                    .encodeForHTML(sql));
+                }
+            }
+        } catch (java.sql.SQLException e) {
             if (org.owasp.benchmark.helpers.DatabaseHelper.hideSQLErrors) {
                 response.getWriter().println("Error processing request.");
             } else throw new ServletException(e);
