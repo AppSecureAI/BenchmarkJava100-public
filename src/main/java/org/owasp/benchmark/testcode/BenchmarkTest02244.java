@@ -49,17 +49,19 @@ public class BenchmarkTest02244 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
+        if (!bar.matches("[a-zA-Z0-9 ]+")) {
+            return;
+        }
+
         java.util.List<String> argList = new java.util.ArrayList<String>();
 
         String osName = System.getProperty("os.name");
         if (osName.indexOf("Windows") != -1) {
             argList.add("cmd.exe");
             argList.add("/c");
-        } else {
-            argList.add("sh");
-            argList.add("-c");
         }
-        argList.add("echo " + bar);
+        argList.add("echo");
+        argList.add(bar);
 
         ProcessBuilder pb = new ProcessBuilder(argList);
 
