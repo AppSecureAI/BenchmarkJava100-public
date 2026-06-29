@@ -29,6 +29,12 @@ public class BenchmarkTest02528 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    private static final java.util.Set<String> ALLOWED_PROCEDURES =
+            java.util.Collections.unmodifiableSet(
+                    new java.util.HashSet<>(
+                            java.util.Arrays.asList(
+                                    "verifyUserPassword", "verifyEmployeeSalary")));
+
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -46,6 +52,11 @@ public class BenchmarkTest02528 extends HttpServlet {
         else param = "";
 
         String bar = doSomething(request, param);
+
+        if (!ALLOWED_PROCEDURES.contains(bar)) {
+            response.getWriter().println("Error processing request.");
+            return;
+        }
 
         String sql = "{call " + bar + "}";
 
