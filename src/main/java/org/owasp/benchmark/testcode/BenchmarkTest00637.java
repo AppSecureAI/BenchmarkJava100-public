@@ -53,7 +53,16 @@ public class BenchmarkTest00637 extends HttpServlet {
         else bar = param;
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+            java.util.Properties benchmarkprops = new java.util.Properties();
+            benchmarkprops.load(
+                    Thread.currentThread().getContextClassLoader().getResourceAsStream("benchmark.properties"));
+            String algorithm = benchmarkprops.getProperty("hashAlg2", "SHA-256");
+            java.util.Set<String> allowedAlgorithms = new java.util.HashSet<>(
+                    java.util.Arrays.asList("SHA-256", "SHA-384", "SHA-512"));
+            if (!allowedAlgorithms.contains(algorithm)) {
+                algorithm = "SHA-256";
+            }
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance(algorithm);
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
