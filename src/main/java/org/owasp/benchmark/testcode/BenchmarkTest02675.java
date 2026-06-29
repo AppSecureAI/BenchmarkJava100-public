@@ -47,7 +47,6 @@ public class BenchmarkTest02675 extends HttpServlet {
         String bar = doSomething(request, param);
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -62,9 +61,18 @@ public class BenchmarkTest02675 extends HttpServlet {
                 }
                 input = java.util.Arrays.copyOf(strInput, i);
             }
-            md.update(input);
-
-            byte[] result = md.digest();
+            byte[] salt = new byte[16];
+            new java.security.SecureRandom().nextBytes(salt);
+            javax.crypto.spec.PBEKeySpec spec =
+                    new javax.crypto.spec.PBEKeySpec(
+                            new String(input).toCharArray(), salt, 600000, 256);
+            javax.crypto.SecretKeyFactory skf =
+                    javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] hash = skf.generateSecret(spec).getEncoded();
+            spec.clearPassword();
+            byte[] result = new byte[salt.length + hash.length];
+            System.arraycopy(salt, 0, result, 0, salt.length);
+            System.arraycopy(hash, 0, result, salt.length, hash.length);
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -86,7 +94,8 @@ public class BenchmarkTest02675 extends HttpServlet {
                                             .encodeForHTML(new String(input))
                                     + "' hashed and stored<br/>");
 
-        } catch (java.security.NoSuchAlgorithmException e) {
+        } catch (java.security.NoSuchAlgorithmException
+                | java.security.spec.InvalidKeySpecException e) {
             System.out.println("Problem executing hash - TestCase");
             throw new ServletException(e);
         }
