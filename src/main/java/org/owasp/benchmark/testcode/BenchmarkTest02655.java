@@ -69,12 +69,15 @@ public class BenchmarkTest02655 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
-        String sql = "INSERT INTO users (username, password) VALUES ('foo','" + bar + "')";
+        String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
 
         try {
-            java.sql.Statement statement =
-                    org.owasp.benchmark.helpers.DatabaseHelper.getSqlStatement();
-            int count = statement.executeUpdate(sql);
+            java.sql.Connection connection =
+                    org.owasp.benchmark.helpers.DatabaseHelper.getSqlConnection();
+            java.sql.PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, "foo");
+            statement.setString(2, bar);
+            statement.executeUpdate();
             org.owasp.benchmark.helpers.DatabaseHelper.outputUpdateComplete(sql, response);
         } catch (java.sql.SQLException e) {
             if (org.owasp.benchmark.helpers.DatabaseHelper.hideSQLErrors) {
