@@ -53,6 +53,6 @@ public class BenchmarkTest00728 extends HttpServlet {
         else bar = "This should never happen";
 
         response.setHeader("X-XSS-Protection", "0");
-        response.getWriter().println(bar);
+        response.getWriter().println(org.owasp.esapi.ESAPI.encoder().encodeForHTML(bar));
     }
 }
