@@ -48,8 +48,9 @@ public class BenchmarkTest01268 extends HttpServlet {
         response.setHeader("X-XSS-Protection", "0");
         int length = 1;
         if (bar != null) {
-            length = bar.length();
-            response.getWriter().write(bar, 0, length);
+            String safe = org.springframework.web.util.HtmlUtils.htmlEscape(bar);
+            length = safe.length();
+            response.getWriter().write(safe, 0, length);
         }
     } // end doPost
 
