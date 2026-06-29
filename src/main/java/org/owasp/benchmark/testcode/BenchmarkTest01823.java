@@ -37,6 +37,7 @@ public class BenchmarkTest01823 extends HttpServlet {
                 new javax.servlet.http.Cookie("BenchmarkTest01823", "someSecret");
         userCookie.setMaxAge(60 * 3); // Store cookie for 3 minutes
         userCookie.setSecure(true);
+        userCookie.setHttpOnly(true);
         userCookie.setPath(request.getRequestURI());
         userCookie.setDomain(new java.net.URL(request.getRequestURL().toString()).getHost());
         response.addCookie(userCookie);
@@ -72,15 +73,17 @@ public class BenchmarkTest01823 extends HttpServlet {
         //	    	(byte)0x44, (byte)0x21, (byte)0xC3, (byte)0xC3033
         //	    };
         java.security.SecureRandom random = new java.security.SecureRandom();
-        byte[] iv = random.generateSeed(8); // DES requires 8 byte keys
+        byte[] iv = new byte[16]; // AES requires 16 byte IV
+        random.nextBytes(iv);
 
         try {
             javax.crypto.Cipher c =
-                    javax.crypto.Cipher.getInstance(
-                            "DES/CBC/PKCS5PADDING", java.security.Security.getProvider("SunJCE"));
+                    javax.crypto.Cipher.getInstance("AES/CBC/PKCS5PADDING");
 
             // Prepare the cipher to encrypt
-            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("DES").generateKey();
+            javax.crypto.KeyGenerator keyGen = javax.crypto.KeyGenerator.getInstance("AES");
+            keyGen.init(256, random);
+            javax.crypto.SecretKey key = keyGen.generateKey();
             java.security.spec.AlgorithmParameterSpec paramSpec =
                     new javax.crypto.spec.IvParameterSpec(iv);
             c.init(javax.crypto.Cipher.ENCRYPT_MODE, key, paramSpec);
