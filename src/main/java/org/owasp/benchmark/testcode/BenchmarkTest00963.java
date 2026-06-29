@@ -37,6 +37,7 @@ public class BenchmarkTest00963 extends HttpServlet {
                 new javax.servlet.http.Cookie("BenchmarkTest00963", "someSecret");
         userCookie.setMaxAge(60 * 3); // Store cookie for 3 minutes
         userCookie.setSecure(true);
+        userCookie.setHttpOnly(true);
         userCookie.setPath(request.getRequestURI());
         userCookie.setDomain(new java.net.URL(request.getRequestURL().toString()).getHost());
         response.addCookie(userCookie);
@@ -65,7 +66,6 @@ public class BenchmarkTest00963 extends HttpServlet {
         String bar = new Test().doSomething(request, param);
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -80,9 +80,16 @@ public class BenchmarkTest00963 extends HttpServlet {
                 }
                 input = java.util.Arrays.copyOf(strInput, i);
             }
-            md.update(input);
-
-            byte[] result = md.digest();
+            byte[] salt = new byte[16];
+            new java.security.SecureRandom().nextBytes(salt);
+            javax.crypto.spec.PBEKeySpec spec =
+                    new javax.crypto.spec.PBEKeySpec(
+                            new String(input, java.nio.charset.StandardCharsets.UTF_8).toCharArray(),
+                            salt, 600000, 256);
+            javax.crypto.SecretKeyFactory skf =
+                    javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] result = skf.generateSecret(spec).getEncoded();
+            spec.clearPassword();
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -90,7 +97,9 @@ public class BenchmarkTest00963 extends HttpServlet {
             java.io.FileWriter fw =
                     new java.io.FileWriter(fileTarget, true); // the true will append the new data
             fw.write(
-                    "hash_value="
+                    "salt="
+                            + org.owasp.esapi.ESAPI.encoder().encodeForBase64(salt, true)
+                            + ",hash_value="
                             + org.owasp.esapi.ESAPI.encoder().encodeForBase64(result, true)
                             + "\n");
             fw.close();
@@ -104,7 +113,7 @@ public class BenchmarkTest00963 extends HttpServlet {
                                             .encodeForHTML(new String(input))
                                     + "' hashed and stored<br/>");
 
-        } catch (java.security.NoSuchAlgorithmException e) {
+        } catch (java.security.NoSuchAlgorithmException | java.security.spec.InvalidKeySpecException e) {
             System.out.println("Problem executing hash - TestCase");
             throw new ServletException(e);
         }
