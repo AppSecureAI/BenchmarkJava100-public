@@ -37,6 +37,7 @@ public class BenchmarkTest01829 extends HttpServlet {
                 new javax.servlet.http.Cookie("BenchmarkTest01829", "someSecret");
         userCookie.setMaxAge(60 * 3); // Store cookie for 3 minutes
         userCookie.setSecure(true);
+        userCookie.setHttpOnly(true);
         userCookie.setPath(request.getRequestURI());
         userCookie.setDomain(new java.net.URL(request.getRequestURL().toString()).getHost());
         response.addCookie(userCookie);
@@ -68,11 +69,11 @@ public class BenchmarkTest01829 extends HttpServlet {
             java.util.Properties benchmarkprops = new java.util.Properties();
             benchmarkprops.load(
                     this.getClass().getClassLoader().getResourceAsStream("benchmark.properties"));
-            String algorithm = benchmarkprops.getProperty("cryptoAlg1", "DESede/ECB/PKCS5Padding");
+            String algorithm = benchmarkprops.getProperty("cryptoAlg1", "AES/GCM/NoPadding");
             javax.crypto.Cipher c = javax.crypto.Cipher.getInstance(algorithm);
 
             // Prepare the cipher to encrypt
-            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("DES").generateKey();
+            javax.crypto.SecretKey key = javax.crypto.KeyGenerator.getInstance("AES").generateKey();
             c.init(javax.crypto.Cipher.ENCRYPT_MODE, key);
 
             // encrypt and store the results
