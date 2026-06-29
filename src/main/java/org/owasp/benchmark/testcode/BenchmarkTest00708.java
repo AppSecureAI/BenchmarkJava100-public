@@ -50,7 +50,14 @@ public class BenchmarkTest00708 extends HttpServlet {
         String bar = thing.doSomething(param);
 
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
+            String hmacKeyValue = System.getenv("HMAC_SIGNING_KEY");
+            if (hmacKeyValue == null || hmacKeyValue.isEmpty()) {
+                throw new java.security.GeneralSecurityException("HMAC_SIGNING_KEY not configured");
+            }
+            javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(
+                    hmacKeyValue.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256");
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            mac.init(keySpec);
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -65,9 +72,9 @@ public class BenchmarkTest00708 extends HttpServlet {
                 }
                 input = java.util.Arrays.copyOf(strInput, i);
             }
-            md.update(input);
+            mac.update(input);
 
-            byte[] result = md.digest();
+            byte[] result = mac.doFinal();
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -89,7 +96,7 @@ public class BenchmarkTest00708 extends HttpServlet {
                                             .encodeForHTML(new String(input))
                                     + "' hashed and stored<br/>");
 
-        } catch (java.security.NoSuchAlgorithmException e) {
+        } catch (java.security.GeneralSecurityException e) {
             System.out.println("Problem executing hash - TestCase");
             throw new ServletException(e);
         }
