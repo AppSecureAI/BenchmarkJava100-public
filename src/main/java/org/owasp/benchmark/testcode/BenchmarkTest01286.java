@@ -63,6 +63,10 @@ public class BenchmarkTest01286 extends HttpServlet {
             args = new String[] {a1, a2, cmd + bar};
         }
 
+        if (!isAllowedOSCommandInput(bar)) {
+            return;
+        }
+
         Runtime r = Runtime.getRuntime();
 
         try {
@@ -75,6 +79,12 @@ public class BenchmarkTest01286 extends HttpServlet {
             return;
         }
     } // end doPost
+
+    private static boolean isAllowedOSCommandInput(String input) {
+        java.util.Set<String> allowed =
+                new java.util.HashSet<>(java.util.Arrays.asList("localhost", "127.0.0.1"));
+        return allowed.contains(input);
+    }
 
     private class Test {
 
