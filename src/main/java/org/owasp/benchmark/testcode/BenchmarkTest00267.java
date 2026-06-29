@@ -53,16 +53,10 @@ public class BenchmarkTest00267 extends HttpServlet {
         StringBuilder sbxyz11795 = new StringBuilder(param);
         String bar = sbxyz11795.append("_SafeStuff").toString();
 
-        java.security.Provider[] provider = java.security.Security.getProviders();
-        java.security.MessageDigest md;
+        byte[] salt = new byte[16];
+        new java.security.SecureRandom().nextBytes(salt);
 
         try {
-            if (provider.length > 1) {
-
-                md = java.security.MessageDigest.getInstance("SHA1", provider[0]);
-            } else {
-                md = java.security.MessageDigest.getInstance("SHA1", "SUN");
-            }
             byte[] input = {(byte) '?'};
             Object inputParam = bar;
             if (inputParam instanceof String) input = ((String) inputParam).getBytes();
@@ -77,9 +71,13 @@ public class BenchmarkTest00267 extends HttpServlet {
                 }
                 input = java.util.Arrays.copyOf(strInput, i);
             }
-            md.update(input);
+            javax.crypto.spec.PBEKeySpec spec = new javax.crypto.spec.PBEKeySpec(
+                    new String(input).toCharArray(), salt, 600000, 256);
+            javax.crypto.SecretKeyFactory skf =
+                    javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+            byte[] result = skf.generateSecret(spec).getEncoded();
+            spec.clearPassword();
 
-            byte[] result = md.digest();
             java.io.File fileTarget =
                     new java.io.File(
                             new java.io.File(org.owasp.benchmark.helpers.Utils.TESTFILES_DIR),
@@ -105,7 +103,7 @@ public class BenchmarkTest00267 extends HttpServlet {
             System.out.println(
                     "Problem executing hash - TestCase java.security.MessageDigest.getInstance(java.lang.String,java.security.Provider)");
             throw new ServletException(e);
-        } catch (java.security.NoSuchProviderException e) {
+        } catch (java.security.spec.InvalidKeySpecException e) {
             System.out.println(
                     "Problem executing hash - TestCase java.security.MessageDigest.getInstance(java.lang.String,java.security.Provider)");
             throw new ServletException(e);
