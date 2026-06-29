@@ -60,22 +60,21 @@ public class BenchmarkTest00293 extends HttpServlet {
         }
 
         java.util.List<String> argList = new java.util.ArrayList<String>();
-
         String osName = System.getProperty("os.name");
         if (osName.indexOf("Windows") != -1) {
             argList.add("cmd.exe");
-            argList.add("/c");
+            argList.add("/C");
+            argList.add("echo");
         } else {
-            argList.add("sh");
-            argList.add("-c");
+            argList.add("/bin/echo");
         }
-        argList.add("echo " + bar);
-
-        ProcessBuilder pb = new ProcessBuilder();
-
-        pb.command(argList);
+        if (!bar.matches("[a-zA-Z0-9 ]*")) {
+            return;
+        }
+        argList.add(bar);
 
         try {
+            ProcessBuilder pb = new ProcessBuilder(argList);
             Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
