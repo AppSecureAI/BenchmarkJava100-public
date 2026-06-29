@@ -37,6 +37,7 @@ public class BenchmarkTest01011 extends HttpServlet {
                 new javax.servlet.http.Cookie("BenchmarkTest01011", "bar");
         userCookie.setMaxAge(60 * 3); // Store cookie for 3 minutes
         userCookie.setSecure(true);
+        userCookie.setHttpOnly(true);
         userCookie.setPath(request.getRequestURI());
         userCookie.setDomain(new java.net.URL(request.getRequestURL().toString()).getHost());
         response.addCookie(userCookie);
@@ -64,14 +65,14 @@ public class BenchmarkTest01011 extends HttpServlet {
 
         String bar = new Test().doSomething(request, param);
 
-        String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
+        String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD=?";
 
         try {
-            java.sql.Statement statement =
-                    org.owasp.benchmark.helpers.DatabaseHelper.getSqlStatement();
-            statement.addBatch(sql);
-            int[] counts = statement.executeBatch();
-            org.owasp.benchmark.helpers.DatabaseHelper.printResults(sql, counts, response);
+            java.sql.PreparedStatement statement =
+                    org.owasp.benchmark.helpers.DatabaseHelper.getSqlConnection().prepareStatement(sql);
+            statement.setString(1, bar);
+            statement.executeQuery();
+            org.owasp.benchmark.helpers.DatabaseHelper.printResults(sql, new int[0], response);
         } catch (java.sql.SQLException e) {
             if (org.owasp.benchmark.helpers.DatabaseHelper.hideSQLErrors) {
                 response.getWriter().println("Error processing request.");
