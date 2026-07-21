@@ -140,14 +140,13 @@ public class Utils {
         // loses its execute permissions. So this hack adds the required execute permissions back.
         if (!System.getProperty("os.name").contains("Windows")) {
             File script = getFileFromClasspath("insecureCmd.sh", Utils.class.getClassLoader());
+            // Least-privilege: only the owner needs read/write/execute on this script.
+            // Group/other access is intentionally omitted to avoid exposing an
+            // executable script to every local user on the host.
             Set<PosixFilePermission> perms = new HashSet<PosixFilePermission>();
             perms.add(PosixFilePermission.OWNER_READ);
             perms.add(PosixFilePermission.OWNER_WRITE);
             perms.add(PosixFilePermission.OWNER_EXECUTE);
-            perms.add(PosixFilePermission.GROUP_READ);
-            perms.add(PosixFilePermission.GROUP_EXECUTE);
-            perms.add(PosixFilePermission.OTHERS_READ);
-            perms.add(PosixFilePermission.OTHERS_EXECUTE);
 
             try {
                 Files.setPosixFilePermissions(script.toPath(), perms);
@@ -423,10 +422,14 @@ public class Utils {
     public static SSLConnectionSocketFactory getSSLFactory() throws Exception {
         SSLContext sslcontext =
                 SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
-        // Allow TLSv1 protocol only
+        // Allow only modern, non-deprecated TLS protocols (TLSv1 and TLSv1.1 are
+        // vulnerable to POODLE and other downgrade/MITM attacks and must not be offered)
         SSLConnectionSocketFactory sslsf =
                 new SSLConnectionSocketFactory(
-                        sslcontext, new String[] {"TLSv1"}, null, NoopHostnameVerifier.INSTANCE);
+                        sslcontext,
+                        new String[] {"TLSv1.2", "TLSv1.3"},
+                        null,
+                        NoopHostnameVerifier.INSTANCE);
         return sslsf;
     }
 
