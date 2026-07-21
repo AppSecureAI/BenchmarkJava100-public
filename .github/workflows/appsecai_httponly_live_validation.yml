@@ -1,0 +1,25 @@
+name: AppSecAI HttpOnly Live Validation
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  workflow_dispatch:
+
+jobs:
+  validate-httponly:
+    runs-on: ubuntu-latest
+    env:
+      PROCESSING_MODE: group_cc
+      GROUPING_STRATEGY: smart
+      AUTO_CREATE_PRS: "true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: AppSecAI focused HttpOnly validation
+        uses: AppSecureAI/automation-action@v1
+        with:
+          file: vuln_file/httponly-only.sarif
