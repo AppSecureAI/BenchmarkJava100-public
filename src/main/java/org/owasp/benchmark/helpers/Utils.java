@@ -50,9 +50,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.client5.http.ssl.TrustSelfSignedStrategy;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.owasp.benchmark.service.pojo.XMLMessage;
 import org.owasp.esapi.ESAPI;
@@ -421,12 +419,11 @@ public class Utils {
     }
 
     public static SSLConnectionSocketFactory getSSLFactory() throws Exception {
-        SSLContext sslcontext =
-                SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
-        // Allow TLSv1 protocol only
+        SSLContext sslcontext = SSLContexts.custom().build();
+        // Only allow modern TLS protocol versions, and enforce default certificate/hostname
+        // verification (no self-signed trust, no hostname verification bypass)
         SSLConnectionSocketFactory sslsf =
-                new SSLConnectionSocketFactory(
-                        sslcontext, new String[] {"TLSv1"}, null, NoopHostnameVerifier.INSTANCE);
+                new SSLConnectionSocketFactory(sslcontext, new String[] {"TLSv1.2", "TLSv1.3"}, null, null);
         return sslsf;
     }
 
