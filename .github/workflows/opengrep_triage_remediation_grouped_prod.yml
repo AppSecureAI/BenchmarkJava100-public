@@ -42,4 +42,5 @@ jobs:
       - name: AppSecAI Triage and Remediation
         uses: AppSecureAI/automation-action@v1
         with:
+          api-url: https://gh.intg.appsecai.net
           file: opengrep-results.sarif
