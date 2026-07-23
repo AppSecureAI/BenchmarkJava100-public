@@ -65,11 +65,15 @@ public class BenchmarkTest00293 extends HttpServlet {
         if (osName.indexOf("Windows") != -1) {
             argList.add("cmd.exe");
             argList.add("/c");
+            argList.add("echo");
         } else {
-            argList.add("sh");
-            argList.add("-c");
+            argList.add("/bin/echo");
         }
-        argList.add("echo " + bar);
+        // Strict allowlist: only alphanumeric and whitespace permitted to prevent command injection
+        if (bar != null && !bar.matches("[a-zA-Z0-9\\s]*")) {
+            bar = "";
+        }
+        argList.add(bar);
 
         ProcessBuilder pb = new ProcessBuilder();
 
