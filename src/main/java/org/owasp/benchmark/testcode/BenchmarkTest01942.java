@@ -50,18 +50,19 @@ public class BenchmarkTest01942 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
-        String cmd = "";
-        String osName = System.getProperty("os.name");
-        if (osName.indexOf("Windows") != -1) {
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
-        }
+        java.util.List<String> cmdList =
+                org.owasp.benchmark.helpers.Utils.getOSCommandArray("echo");
+        cmdList.add(bar);
 
         String[] argsEnv = {"Foo=bar"};
         Runtime r = Runtime.getRuntime();
 
         try {
             Process p =
-                    r.exec(cmd + bar, argsEnv, new java.io.File(System.getProperty("user.dir")));
+                    r.exec(
+                            cmdList.toArray(new String[0]),
+                            argsEnv,
+                            new java.io.File(System.getProperty("user.dir")));
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
