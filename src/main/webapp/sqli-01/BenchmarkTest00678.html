@@ -10,6 +10,10 @@
 </head>
 <body>
     <form action="/benchmark/sqli-01/BenchmarkTest00678" method="POST" id="FormBenchmarkTest00678" autocomplete="off">
+        <input type="hidden" name="CSRFToken" id="csrf_token_field" value="">
+        <script type="text/javascript">
+            document.getElementById('csrf_token_field').value = Cookies.get('CSRFToken') || '';
+        </script>
         <p>Please make your car selection, and edit the value to be sent [value]:</p>
         <select name="BenchmarkTest00678" multiple>
             <option value="bar" selected>Audi. [bar]</option>
