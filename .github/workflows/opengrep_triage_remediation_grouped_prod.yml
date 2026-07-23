@@ -19,7 +19,7 @@ jobs:
       AUTO_CREATE_PRS: "true"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
@@ -33,13 +33,13 @@ jobs:
           ./opengrep scan --sarif --sarif-output=opengrep-results.sarif --config auto . || true
 
       - name: Upload SARIF as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: opengrep-sarif
           path: opengrep-results.sarif
           retention-days: 7
 
       - name: AppSecAI Triage and Remediation
-        uses: AppSecureAI/automation-action@v1
+        uses: AppSecureAI/automation-action@83b6fa3829e33724beb5bbedc4f6976b814c9ff9 # v1
         with:
           file: opengrep-results.sarif
