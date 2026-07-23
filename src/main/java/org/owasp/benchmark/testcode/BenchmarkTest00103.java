@@ -70,11 +70,11 @@ public class BenchmarkTest00103 extends HttpServlet {
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
         String sql =
-                "SELECT TOP 1 USERNAME from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
+                "SELECT TOP 1 USERNAME from USERS where USERNAME='foo' and PASSWORD=?";
         try {
             Object results =
                     org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.queryForObject(
-                            sql, new Object[] {}, String.class);
+                            sql, new Object[] {bar}, String.class);
             response.getWriter().println("Your results are: ");
 
             //		System.out.println("Your results are");
