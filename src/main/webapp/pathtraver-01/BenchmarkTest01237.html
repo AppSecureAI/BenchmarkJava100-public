@@ -10,6 +10,7 @@
 </head>
 <body>
     <form action="/benchmark/pathtraver-01/BenchmarkTest01237" method="POST" id="FormBenchmarkTest01237" autocomplete="off">
+        {% csrf_token %}
         <p>Please make your car selection, and edit the value to be sent [value]:</p>
         <select name="BenchmarkTest01237" multiple>
             <option value="FileName" selected>Audi. [FileName]</option>
