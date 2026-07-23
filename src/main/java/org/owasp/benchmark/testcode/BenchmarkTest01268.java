@@ -49,7 +49,7 @@ public class BenchmarkTest01268 extends HttpServlet {
         int length = 1;
         if (bar != null) {
             length = bar.length();
-            response.getWriter().write(bar, 0, length);
+            response.getWriter().write(org.owasp.esapi.ESAPI.encoder().encodeForHTML(bar));
         }
     } // end doPost
 
