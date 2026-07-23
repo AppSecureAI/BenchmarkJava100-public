@@ -29,6 +29,18 @@ public class BenchmarkTest00008 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    private static final java.util.logging.Logger LOGGER =
+            java.util.logging.Logger.getLogger(BenchmarkTest00008.class.getName());
+
+    private static final java.util.Map<String, String> PROCEDURE_SQL_MAP;
+
+    static {
+        java.util.Map<String, String> map = new java.util.HashMap<>();
+        map.put("verifyUserPassword", "{call verifyUserPassword}");
+        map.put("verifyEmployeeSalary", "{call verifyEmployeeSalary}");
+        PROCEDURE_SQL_MAP = java.util.Collections.unmodifiableMap(map);
+    }
+
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -49,7 +61,12 @@ public class BenchmarkTest00008 extends HttpServlet {
         // URL Decode the header value since req.getHeader() doesn't. Unlike req.getParameter().
         param = java.net.URLDecoder.decode(param, "UTF-8");
 
-        String sql = "{call " + param + "}";
+        String sql = PROCEDURE_SQL_MAP.get(param);
+        if (sql == null) {
+            LOGGER.warning("Invalid procedure name rejected for endpoint BenchmarkTest00008");
+            response.getWriter().println("Error processing request.");
+            return;
+        }
 
         try {
             java.sql.Connection connection =
