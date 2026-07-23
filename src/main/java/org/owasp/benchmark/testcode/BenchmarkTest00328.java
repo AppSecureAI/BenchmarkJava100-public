@@ -28,6 +28,16 @@ import javax.servlet.http.HttpServletResponse;
 public class BenchmarkTest00328 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+    private static final java.util.logging.Logger LOGGER =
+            java.util.logging.Logger.getLogger(BenchmarkTest00328.class.getName());
+    private static final java.util.Map<String, String> ALLOWED_PROCEDURES;
+
+    static {
+        java.util.Map<String, String> m = new java.util.HashMap<>();
+        m.put("verifyUser", "{call verifyUser}");
+        m.put("getUserInfo", "{call getUserInfo}");
+        ALLOWED_PROCEDURES = java.util.Collections.unmodifiableMap(m);
+    }
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -57,7 +67,12 @@ public class BenchmarkTest00328 extends HttpServlet {
 
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
-        String sql = "{call " + bar + "}";
+        String sql = ALLOWED_PROCEDURES.get(bar);
+        if (sql == null) {
+            LOGGER.warning("Blocked invalid stored procedure name in BenchmarkTest00328");
+            response.getWriter().println("Error processing request.");
+            return;
+        }
 
         try {
             java.sql.Connection connection =
