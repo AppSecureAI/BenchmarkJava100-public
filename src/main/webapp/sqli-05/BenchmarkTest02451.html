@@ -10,6 +10,7 @@
 </head>
 <body>
     <form action="/benchmark/sqli-05/BenchmarkTest02451" method="POST" id="FormBenchmarkTest02451" autocomplete="off">
+        {% csrf_token %}
         <p>Please make your car selection, and edit the value to be sent [value]:</p>
         <select name="BenchmarkTest02451" multiple>
             <option value="bar" selected>Audi. [bar]</option>
