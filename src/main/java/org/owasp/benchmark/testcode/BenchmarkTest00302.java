@@ -57,16 +57,17 @@ public class BenchmarkTest00302 extends HttpServlet {
 
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
-        String cmd = "";
-        String osName = System.getProperty("os.name");
-        if (osName.indexOf("Windows") != -1) {
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
+        // Allowlist validation: only safe characters permitted; fail closed on invalid input
+        if (!bar.matches("[a-zA-Z0-9 ._\\-]*")) {
+            return;
         }
+
+        String[] cmdArray = {"/bin/echo", bar};
 
         Runtime r = Runtime.getRuntime();
 
         try {
-            Process p = r.exec(cmd + bar);
+            Process p = r.exec(cmdArray);
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
