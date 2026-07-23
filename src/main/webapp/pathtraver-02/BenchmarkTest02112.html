@@ -11,12 +11,14 @@
 <body>
     <form action="/benchmark/pathtraver-02/BenchmarkTest02112" method="POST" id="FormBenchmarkTest02112" autocomplete="off">
         <p>Please make your car selection, and edit the value to be sent [value]:</p>
+        <input type="hidden" name="csrf_token" id="csrf_token_BenchmarkTest02112" value="">
         <select name="BenchmarkTest02112" multiple>
             <option value="FileName" selected>Audi. [FileName]</option>
             <option value="Ford">Ford. [Ford]</option>
             <option value="Opel">Opel. [Opel]</option>
             <option value="Subaru">Subaru. [Subaru]</option>
         </select><br> <br> <input type="submit" value="Submit">
+        <script>document.getElementById('csrf_token_BenchmarkTest02112').value = Cookies.get('csrf_token') || '';</script>
     </form>
 </body>
 </html>
