@@ -18,6 +18,8 @@
 package org.owasp.benchmark.testcode;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -28,6 +30,13 @@ import javax.servlet.http.HttpServletResponse;
 public class BenchmarkTest01286 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+
+    private static final List<String> ALLOWED_COMMAND_ARGS =
+            Arrays.asList("localhost", "127.0.0.1");
+
+    private static boolean isValidCommandArg(String value) {
+        return value != null && ALLOWED_COMMAND_ARGS.contains(value);
+    }
 
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -44,6 +53,10 @@ public class BenchmarkTest01286 extends HttpServlet {
         if (param == null) param = "";
 
         String bar = new Test().doSomething(request, param);
+
+        if (!isValidCommandArg(bar)) {
+            return;
+        }
 
         String cmd = "";
         String a1 = "";
