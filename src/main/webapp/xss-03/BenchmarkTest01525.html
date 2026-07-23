@@ -16,7 +16,8 @@
             <option value="Ford">Ford. [Ford]</option>
             <option value="Opel">Opel. [Opel]</option>
             <option value="Subaru">Subaru. [Subaru]</option>
-        </select><br> <br> <input type="submit" value="Submit">
+        </select><br> <br> <input type="hidden" name="csrf_token" id="csrf_token_field" value=""><input type="submit" value="Submit">
     </form>
+    <script>document.getElementById('csrf_token_field').value = Cookies.get('csrf_token') || '';</script>
 </body>
 </html>
