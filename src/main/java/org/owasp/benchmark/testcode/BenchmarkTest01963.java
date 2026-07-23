@@ -51,9 +51,18 @@ public class BenchmarkTest01963 extends HttpServlet {
         String bar = doSomething(request, param);
 
         try {
-            String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
+            String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD=?";
 
-            org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.batchUpdate(sql);
+            java.sql.Connection connection =
+                    org.owasp.benchmark.helpers.DatabaseHelper.getSqlConnection();
+            java.sql.PreparedStatement statement =
+                    connection.prepareStatement(
+                            sql,
+                            java.sql.ResultSet.TYPE_FORWARD_ONLY,
+                            java.sql.ResultSet.CONCUR_READ_ONLY,
+                            java.sql.ResultSet.CLOSE_CURSORS_AT_COMMIT);
+            statement.setString(1, bar);
+            statement.execute();
             response.getWriter()
                     .println(
                             "No results can be displayed for query: "
@@ -62,7 +71,7 @@ public class BenchmarkTest01963 extends HttpServlet {
                                     + " because the Spring batchUpdate method doesn't return results.");
             //		System.out.println("no results for query: " + sql + " because the Spring batchUpdate
             // method doesn't return results.");
-        } catch (org.springframework.dao.DataAccessException e) {
+        } catch (java.sql.SQLException e) {
             if (org.owasp.benchmark.helpers.DatabaseHelper.hideSQLErrors) {
                 response.getWriter().println("Error processing request.");
             } else throw new ServletException(e);
