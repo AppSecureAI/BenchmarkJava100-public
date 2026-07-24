@@ -45,6 +45,14 @@ public class BenchmarkTest01287 extends HttpServlet {
 
         String bar = new Test().doSomething(request, param);
 
+        // Allowlist: the OS command script consumes this value via an environment
+        // variable that is later evaluated by the shell, so only permit a fixed,
+        // safe character set (alphanumerics). Any value outside the allowlist is
+        // rejected in favor of a safe empty default rather than reaching the shell.
+        if (!bar.matches("[a-zA-Z0-9]*")) {
+            bar = "";
+        }
+
         String cmd =
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
