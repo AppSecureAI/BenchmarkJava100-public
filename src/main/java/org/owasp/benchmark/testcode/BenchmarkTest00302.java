@@ -29,6 +29,18 @@ public class BenchmarkTest00302 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    // Explicit allowlist of the only command this endpoint is permitted to invoke.
+    private static final java.util.Map<String, String> ALLOWED_COMMANDS =
+            java.util.Collections.singletonMap("echo", "echo");
+
+    // Narrow allowlist tied to the supported command grammar: the echoed value may
+    // only contain alphanumerics, spaces, and a small set of benign punctuation.
+    // Any shell metacharacter (&, |, ;, <, >, ^, %, quotes, etc.) is rejected so it
+    // can never be interpreted by the Windows cmd.exe wrapper required to invoke the
+    // built-in echo command.
+    private static final java.util.regex.Pattern SAFE_ARG_PATTERN =
+            java.util.regex.Pattern.compile("^[a-zA-Z0-9 ._-]*$");
+
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -57,16 +69,33 @@ public class BenchmarkTest00302 extends HttpServlet {
 
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
-        String cmd = "";
-        String osName = System.getProperty("os.name");
-        if (osName.indexOf("Windows") != -1) {
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
+        // Fail closed: on Windows, echo is a cmd.exe built-in, so cmd.exe /c must be
+        // used to invoke it and the trailing argument is parsed by that shell rather
+        // than passed as an isolated argv element. Constrain the shell-consumed value
+        // to the narrow allowlisted grammar this endpoint actually supports (a plain
+        // echoed value) before it is ever added to the command; anything containing
+        // shell metacharacters is replaced with the safe empty default instead of
+        // reaching the shell.
+        if (!SAFE_ARG_PATTERN.matcher(bar).matches()) {
+            bar = "";
         }
 
-        Runtime r = Runtime.getRuntime();
+        java.util.List<String> argList = new java.util.ArrayList<String>();
+        String osName = System.getProperty("os.name");
+        String echoCommand = ALLOWED_COMMANDS.get("echo");
+        if (osName.indexOf("Windows") != -1) {
+            argList.add("cmd.exe");
+            argList.add("/c");
+            argList.add(echoCommand);
+        } else {
+            argList.add(echoCommand);
+        }
+        argList.add(bar);
+
+        ProcessBuilder pb = new ProcessBuilder(argList);
 
         try {
-            Process p = r.exec(cmd + bar);
+            Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
