@@ -47,12 +47,43 @@ public class BenchmarkTest02528 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
-        String sql = "{call " + bar + "}";
+        // Only allow calls to known stored procedures with quoted string-literal
+        // arguments; anything outside this allowlisted shape is rejected below
+        // instead of being concatenated into the SQL call.
+        java.util.regex.Matcher callMatcher =
+                java.util.regex.Pattern.compile(
+                                "^(verifyUserPassword|verifyEmployeeSalary)\\(((?:'[^']*'\\s*,\\s*)*'[^']*')?\\)$")
+                        .matcher(bar);
+
+        if (!callMatcher.matches()) {
+            response.getWriter().println("Error processing request.");
+            return;
+        }
+
+        String procedureName = callMatcher.group(1);
+        java.util.List<String> callArgs = new java.util.ArrayList<String>();
+        java.util.regex.Matcher argMatcher =
+                java.util.regex.Pattern.compile("'([^']*)'")
+                        .matcher(callMatcher.group(2) == null ? "" : callMatcher.group(2));
+        while (argMatcher.find()) {
+            callArgs.add(argMatcher.group(1));
+        }
+
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < callArgs.size(); i++) {
+            if (i > 0) placeholders.append(", ");
+            placeholders.append("?");
+        }
+
+        String sql = "{call " + procedureName + "(" + placeholders + ")}";
 
         try {
             java.sql.Connection connection =
                     org.owasp.benchmark.helpers.DatabaseHelper.getSqlConnection();
             java.sql.CallableStatement statement = connection.prepareCall(sql);
+            for (int i = 0; i < callArgs.size(); i++) {
+                statement.setString(i + 1, callArgs.get(i));
+            }
             java.sql.ResultSet rs = statement.executeQuery();
             org.owasp.benchmark.helpers.DatabaseHelper.printResults(rs, sql, response);
 
