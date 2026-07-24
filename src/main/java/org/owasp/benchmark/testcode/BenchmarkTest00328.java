@@ -57,12 +57,51 @@ public class BenchmarkTest00328 extends HttpServlet {
 
         bar = (7 * 42) - num > 200 ? "This should never happen" : param;
 
-        String sql = "{call " + bar + "}";
+        // Only a fixed set of stored procedures may be invoked, and their arguments are bound as
+        // parameters rather than concatenated into the SQL text, to prevent SQL injection.
+        String procedureName = null;
+        java.util.List<String> arguments = new java.util.ArrayList<String>();
+
+        java.util.regex.Matcher matcher =
+                java.util.regex.Pattern.compile("^([A-Za-z][A-Za-z0-9_]*)\\((.*)\\)$").matcher(bar);
+        if (matcher.matches()) {
+            String requestedName = matcher.group(1);
+            String rawArgs = matcher.group(2).trim();
+            if (!rawArgs.isEmpty()) {
+                for (String rawArg : rawArgs.split(",")) {
+                    String trimmed = rawArg.trim();
+                    if (trimmed.length() >= 2 && trimmed.startsWith("'") && trimmed.endsWith("'")) {
+                        trimmed = trimmed.substring(1, trimmed.length() - 1);
+                    }
+                    arguments.add(trimmed);
+                }
+            }
+            if ("verifyUserPassword".equals(requestedName) && arguments.size() == 2) {
+                procedureName = "verifyUserPassword";
+            } else if ("verifyEmployeeSalary".equals(requestedName) && arguments.size() == 1) {
+                procedureName = "verifyEmployeeSalary";
+            }
+        }
 
         try {
+            if (procedureName == null) {
+                response.getWriter().println("Error processing request.");
+                return;
+            }
+
+            StringBuilder placeholders = new StringBuilder();
+            for (int i = 0; i < arguments.size(); i++) {
+                if (i > 0) placeholders.append(",");
+                placeholders.append("?");
+            }
+            String sql = "{call " + procedureName + "(" + placeholders + ")}";
+
             java.sql.Connection connection =
                     org.owasp.benchmark.helpers.DatabaseHelper.getSqlConnection();
             java.sql.CallableStatement statement = connection.prepareCall(sql);
+            for (int i = 0; i < arguments.size(); i++) {
+                statement.setString(i + 1, arguments.get(i));
+            }
             java.sql.ResultSet rs = statement.executeQuery();
             org.owasp.benchmark.helpers.DatabaseHelper.printResults(rs, sql, response);
 
