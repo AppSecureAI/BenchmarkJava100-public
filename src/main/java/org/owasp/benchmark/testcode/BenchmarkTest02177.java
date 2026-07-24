@@ -45,7 +45,7 @@ public class BenchmarkTest02177 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
-        String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD='" + bar + "'";
+        String sql = "SELECT * from USERS where USERNAME='foo' and PASSWORD=?";
         try {
             java.util.List<String> results =
                     org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.query(
@@ -63,7 +63,8 @@ public class BenchmarkTest02177 extends HttpServlet {
                                         } else throw e;
                                     }
                                 }
-                            });
+                            },
+                            bar);
             response.getWriter().println("Your results are: ");
 
             for (String s : results) {
