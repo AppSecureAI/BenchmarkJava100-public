@@ -29,6 +29,16 @@ public class BenchmarkTest00008 extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
+    // Allowlist of stored procedures that may be invoked through this endpoint.
+    private static final java.util.Set<String> ALLOWED_PROCEDURES =
+            new java.util.HashSet<>(
+                    java.util.Arrays.asList("verifyUserPassword", "verifyEmployeeSalary"));
+
+    // Matches "procedureName('arg1','arg2', ...)" with only quoted string-literal arguments.
+    private static final java.util.regex.Pattern CALL_PATTERN =
+            java.util.regex.Pattern.compile(
+                    "^([A-Za-z_][A-Za-z0-9_]*)\\(\\s*((?:'[^']*'\\s*,\\s*)*'[^']*')?\\s*\\)$");
+
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -49,12 +59,40 @@ public class BenchmarkTest00008 extends HttpServlet {
         // URL Decode the header value since req.getHeader() doesn't. Unlike req.getParameter().
         param = java.net.URLDecoder.decode(param, "UTF-8");
 
-        String sql = "{call " + param + "}";
+        // Only a call to an allowlisted procedure with quoted string-literal arguments is
+        // accepted; the procedure name and argument values are never concatenated into the
+        // SQL text itself.
+        java.util.regex.Matcher callMatcher = CALL_PATTERN.matcher(param.trim());
+        if (!callMatcher.matches() || !ALLOWED_PROCEDURES.contains(callMatcher.group(1))) {
+            response.getWriter().println("Error processing request.");
+            return;
+        }
+
+        String procedureName = callMatcher.group(1);
+        java.util.List<String> callArgs = new java.util.ArrayList<>();
+        String rawArgs = callMatcher.group(2);
+        if (rawArgs != null) {
+            java.util.regex.Matcher argMatcher =
+                    java.util.regex.Pattern.compile("'([^']*)'").matcher(rawArgs);
+            while (argMatcher.find()) {
+                callArgs.add(argMatcher.group(1));
+            }
+        }
+
+        StringBuilder placeholders = new StringBuilder();
+        for (int i = 0; i < callArgs.size(); i++) {
+            if (i > 0) placeholders.append(",");
+            placeholders.append("?");
+        }
+        String sql = "{call " + procedureName + "(" + placeholders + ")}";
 
         try {
             java.sql.Connection connection =
                     org.owasp.benchmark.helpers.DatabaseHelper.getSqlConnection();
             java.sql.CallableStatement statement = connection.prepareCall(sql);
+            for (int i = 0; i < callArgs.size(); i++) {
+                statement.setString(i + 1, callArgs.get(i));
+            }
             java.sql.ResultSet rs = statement.executeQuery();
             org.owasp.benchmark.helpers.DatabaseHelper.printResults(rs, sql, response);
 
