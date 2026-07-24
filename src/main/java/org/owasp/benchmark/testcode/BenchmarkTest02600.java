@@ -72,8 +72,9 @@ public class BenchmarkTest02600 extends HttpServlet {
         response.setHeader("X-XSS-Protection", "0");
         int length = 1;
         if (bar != null) {
-            length = bar.length();
-            response.getWriter().write(bar.toCharArray(), 0, length);
+            String encodedBar = org.owasp.esapi.ESAPI.encoder().encodeForHTML(bar);
+            length = encodedBar.length();
+            response.getWriter().write(encodedBar.toCharArray(), 0, length);
         }
     } // end doPost
 
