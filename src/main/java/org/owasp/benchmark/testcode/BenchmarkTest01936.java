@@ -50,16 +50,26 @@ public class BenchmarkTest01936 extends HttpServlet {
 
         String bar = doSomething(request, param);
 
-        String cmd = "";
+        // Allowlist the value passed to the fixed "echo" command: only plain
+        // alphanumeric text (plus space, dot, underscore, hyphen) is permitted.
+        // Anything containing shell metacharacters is rejected and replaced with
+        // a safe empty value instead of reaching the OS command.
+        if (!bar.matches("[a-zA-Z0-9 ._-]*")) {
+            bar = "";
+        }
+
         String osName = System.getProperty("os.name");
+        String[] args;
         if (osName.indexOf("Windows") != -1) {
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
+            args = new String[] {"cmd.exe", "/c", "echo", bar};
+        } else {
+            args = new String[] {"echo", bar};
         }
 
         Runtime r = Runtime.getRuntime();
 
         try {
-            Process p = r.exec(cmd + bar);
+            Process p = r.exec(args);
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
