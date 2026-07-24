@@ -53,13 +53,25 @@ public class BenchmarkTest02244 extends HttpServlet {
 
         String osName = System.getProperty("os.name");
         if (osName.indexOf("Windows") != -1) {
+            // "echo" is a cmd.exe built-in with no standalone executable on Windows, so cmd.exe
+            // /c is still required here. Because cmd.exe re-parses its argument string, it
+            // interprets shell metacharacters (&, |, etc.) in the value even though ProcessBuilder
+            // supplies it as a separate argv element. This is the only branch where user input
+            // reaches a shell, so an allowlist restricts it to characters with no meaning to
+            // cmd.exe; invalid input fails closed to an empty value rather than reaching the
+            // command below.
+            if (bar == null || !bar.matches("[a-zA-Z0-9 ._-]*")) {
+                bar = "";
+            }
             argList.add("cmd.exe");
             argList.add("/c");
+            argList.add("echo");
         } else {
-            argList.add("sh");
-            argList.add("-c");
+            // No shell interpreter is used at all: the echo executable is invoked directly, so
+            // the argument is passed to it verbatim without risk of command injection.
+            argList.add("/bin/echo");
         }
-        argList.add("echo " + bar);
+        argList.add(bar);
 
         ProcessBuilder pb = new ProcessBuilder(argList);
 
