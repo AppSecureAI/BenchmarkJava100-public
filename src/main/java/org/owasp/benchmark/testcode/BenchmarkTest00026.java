@@ -44,10 +44,10 @@ public class BenchmarkTest00026 extends HttpServlet {
         String param = request.getParameter("BenchmarkTest00026");
         if (param == null) param = "";
 
-        String sql = "SELECT  * from USERS where USERNAME='foo' and PASSWORD='" + param + "'";
+        String sql = "SELECT  * from USERS where USERNAME='foo' and PASSWORD=?";
         try {
             org.springframework.jdbc.support.rowset.SqlRowSet results =
-                    org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.queryForRowSet(sql);
+                    org.owasp.benchmark.helpers.DatabaseHelper.JDBCtemplate.queryForRowSet(sql, param);
             response.getWriter().println("Your results are: ");
 
             //		System.out.println("Your results are");
