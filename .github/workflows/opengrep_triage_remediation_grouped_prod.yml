@@ -23,23 +23,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download OpenGrep
-        run: |
-          curl -sL "https://github.com/opengrep/opengrep/releases/download/${OPENGREP_VERSION}/opengrep_manylinux_x86" -o opengrep
-          chmod +x opengrep
-
-      - name: Run OpenGrep scan
-        run: |
-          ./opengrep scan --sarif --sarif-output=opengrep-results.sarif --config auto . || true
-
       - name: Upload SARIF as artifact
         uses: actions/upload-artifact@v4
         with:
           name: opengrep-sarif
-          path: opengrep-results.sarif
+          path: vuln_file/output_sarif_100.sarif
           retention-days: 7
 
       - name: AppSecAI Triage and Remediation
         uses: AppSecureAI/automation-action@v1
         with:
-          file: opengrep-results.sarif
+          file: vuln_file/output_sarif_100.sarif
