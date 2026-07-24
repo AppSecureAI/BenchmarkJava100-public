@@ -39,6 +39,7 @@ public class BenchmarkTest00103 extends HttpServlet {
         userCookie.setSecure(true);
         userCookie.setPath(request.getRequestURI());
         userCookie.setDomain(new java.net.URL(request.getRequestURL().toString()).getHost());
+        userCookie.setHttpOnly(true);
         response.addCookie(userCookie);
         javax.servlet.RequestDispatcher rd =
                 request.getRequestDispatcher("/sqli-00/BenchmarkTest00103.html");
