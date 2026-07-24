@@ -50,18 +50,35 @@ public class BenchmarkTest00176 extends HttpServlet {
 
         String bar = param;
 
-        String cmd = "";
+        // Build a fixed, non-shell command vector so the user-supplied value can only ever be
+        // consumed as a single literal argument to the "echo" executable, never as the
+        // executable itself or as additional shell-interpreted tokens/commands.
+        java.util.List<String> command = new java.util.ArrayList<String>();
         String osName = System.getProperty("os.name");
         if (osName.indexOf("Windows") != -1) {
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
+            // "echo" is a cmd.exe builtin, so cmd.exe /c is unavoidable here. cmd.exe re-parses
+            // its argument string itself, so array-based arguments alone do not stop shell
+            // metacharacters from being interpreted. Strictly allowlist the value before it is
+            // ever handed to cmd.exe so shell metacharacters can never reach the shell parser.
+            if (!bar.matches("[a-zA-Z0-9 ._-]*")) {
+                response.getWriter().println("Invalid input.");
+                return;
+            }
+            command.add("cmd.exe");
+            command.add("/c");
+            command.add("echo");
+        } else {
+            command.add("echo");
         }
+        command.add(bar);
 
-        String[] argsEnv = {"Foo=bar"};
-        Runtime r = Runtime.getRuntime();
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.environment().clear();
+        pb.environment().put("Foo", "bar");
+        pb.directory(new java.io.File(System.getProperty("user.dir")));
 
         try {
-            Process p =
-                    r.exec(cmd + bar, argsEnv, new java.io.File(System.getProperty("user.dir")));
+            Process p = pb.start();
             org.owasp.benchmark.helpers.Utils.printOSCommandResults(p, response);
         } catch (IOException e) {
             System.out.println("Problem executing cmdi - TestCase");
