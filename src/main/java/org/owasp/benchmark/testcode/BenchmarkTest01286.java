@@ -45,22 +45,25 @@ public class BenchmarkTest01286 extends HttpServlet {
 
         String bar = new Test().doSomething(request, param);
 
-        String cmd = "";
-        String a1 = "";
-        String a2 = "";
+        // Restrict the value used in the OS command to a safe allowlist of characters so
+        // shell metacharacters cannot alter the command that gets executed. Invalid input
+        // is replaced with a safe empty value rather than being passed to the command.
+        if (!bar.matches("[a-zA-Z0-9._-]*")) {
+            bar = "";
+        }
+
         String[] args = null;
         String osName = System.getProperty("os.name");
 
         if (osName.indexOf("Windows") != -1) {
-            a1 = "cmd.exe";
-            a2 = "/c";
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("echo");
-            args = new String[] {a1, a2, cmd, bar};
+            // "echo" is a cmd.exe builtin, so cmd.exe /c is required, but each argument is
+            // passed as a distinct array element instead of being concatenated into a
+            // single shell-parsed string.
+            args = new String[] {"cmd.exe", "/c", "echo", bar};
         } else {
-            a1 = "sh";
-            a2 = "-c";
-            cmd = org.owasp.benchmark.helpers.Utils.getOSCommandString("ping -c1 ");
-            args = new String[] {a1, a2, cmd + bar};
+            // Invoke "ping" directly with argument-array execution instead of wrapping it in
+            // a shell (sh -c), so shell metacharacters in "bar" have no special meaning.
+            args = new String[] {"ping", "-c1", bar};
         }
 
         Runtime r = Runtime.getRuntime();
