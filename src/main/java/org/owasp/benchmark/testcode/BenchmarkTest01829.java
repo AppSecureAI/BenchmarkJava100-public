@@ -39,6 +39,7 @@ public class BenchmarkTest01829 extends HttpServlet {
         userCookie.setSecure(true);
         userCookie.setPath(request.getRequestURI());
         userCookie.setDomain(new java.net.URL(request.getRequestURL().toString()).getHost());
+        userCookie.setHttpOnly(true);
         response.addCookie(userCookie);
         javax.servlet.RequestDispatcher rd =
                 request.getRequestDispatcher("/crypto-02/BenchmarkTest01829.html");
