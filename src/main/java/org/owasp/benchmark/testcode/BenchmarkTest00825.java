@@ -71,6 +71,13 @@ public class BenchmarkTest00825 extends HttpServlet {
                 org.owasp.benchmark.helpers.ThingFactory.createThing();
         String bar = thing.doSomething(param);
 
+        // Allowlist: only alphanumeric values may reach the OS command environment,
+        // preventing shell metacharacters from escaping the insecure command script.
+        if (!bar.matches("[a-zA-Z0-9]*")) {
+            response.getWriter().println("Invalid input.");
+            return;
+        }
+
         String cmd =
                 org.owasp.benchmark.helpers.Utils.getInsecureOSCommandString(
                         this.getClass().getClassLoader());
